@@ -689,12 +689,15 @@ app.post("/api/deploy-vercel", async (req, res) => {
         <p class="text-xs opacity-75">${sec.description}</p>
         <div class="space-y-2">
           ${(sec.contentItems || []).map((item: any) => `
-            <div class="p-3 rounded-2xl bg-black/30 border border-white/5 flex justify-between items-center text-xs">
-              <div>
-                <span class="font-bold">${item.title}</span>
-                <p class="text-[10px] opacity-60">${item.subtitle || ''}</p>
+            <div class="p-3 rounded-2xl bg-black/30 border border-white/5 flex justify-between items-center text-xs gap-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                ${item.image ? `<img src="${item.image}" alt="${item.title}" class="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/20">` : ''}
+                <div class="min-w-0">
+                  <span class="font-bold block truncate">${item.title}</span>
+                  <p class="text-[10px] opacity-60 truncate">${item.subtitle || ''}</p>
+                </div>
               </div>
-              <span class="font-bold text-emerald-400">${item.price || ''}</span>
+              <span class="font-bold text-emerald-400 shrink-0">${item.price || ''}</span>
             </div>
           `).join('')}
         </div>

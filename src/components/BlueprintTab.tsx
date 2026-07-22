@@ -40,7 +40,8 @@ import {
   CheckCircle2,
   Building2,
   Phone,
-  FileText
+  FileText,
+  Upload
 } from 'lucide-react';
 import { WebsiteBlueprint, SitePage } from '../types';
 import { ExportGuideModal } from './ExportGuideModal';
@@ -173,6 +174,10 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
   const [imageSourceLabel, setImageSourceLabel] = useState<string | null>(null);
   const [imageAppliedNotice, setImageAppliedNotice] = useState<string | null>(null);
   const [generatedHistory, setGeneratedHistory] = useState<string[]>([]);
+
+  // User Product Photos Upload State
+  const [userUploadedPhotos, setUserUploadedPhotos] = useState<string[]>([]);
+  const [uploadNotice, setUploadNotice] = useState<string | null>(null);
 
   // Category Preset Prompts
   const presetPrompts = [
@@ -353,6 +358,160 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
       return { ...p, sections: updatedSections };
     });
     onUpdateBlueprint({ ...blueprint, pages: updatedPages });
+  };
+
+  const handleUpdateItemImage = (
+    pageId: string,
+    sectionId: string,
+    itemIdx: number,
+    imageUrl: string
+  ) => {
+    const updatedPages = blueprint.pages.map((p) => {
+      if (p.id !== pageId) return p;
+      const updatedSections = p.sections.map((sec) => {
+        if (sec.id !== sectionId || !sec.contentItems) return sec;
+        const updatedItems = [...sec.contentItems];
+        updatedItems[itemIdx] = { ...updatedItems[itemIdx], image: imageUrl };
+        return { ...sec, contentItems: updatedItems };
+      });
+      return { ...p, sections: updatedSections };
+    });
+    onUpdateBlueprint({ ...blueprint, pages: updatedPages });
+  };
+
+  const handleUpdateItemTitle = (
+    pageId: string,
+    sectionId: string,
+    itemIdx: number,
+    newTitle: string
+  ) => {
+    const updatedPages = blueprint.pages.map((p) => {
+      if (p.id !== pageId) return p;
+      const updatedSections = p.sections.map((sec) => {
+        if (sec.id !== sectionId || !sec.contentItems) return sec;
+        const updatedItems = [...sec.contentItems];
+        updatedItems[itemIdx] = { ...updatedItems[itemIdx], title: newTitle };
+        return { ...sec, contentItems: updatedItems };
+      });
+      return { ...p, sections: updatedSections };
+    });
+    onUpdateBlueprint({ ...blueprint, pages: updatedPages });
+  };
+
+  const handleUpdateItemSubtitle = (
+    pageId: string,
+    sectionId: string,
+    itemIdx: number,
+    newSubtitle: string
+  ) => {
+    const updatedPages = blueprint.pages.map((p) => {
+      if (p.id !== pageId) return p;
+      const updatedSections = p.sections.map((sec) => {
+        if (sec.id !== sectionId || !sec.contentItems) return sec;
+        const updatedItems = [...sec.contentItems];
+        updatedItems[itemIdx] = { ...updatedItems[itemIdx], subtitle: newSubtitle };
+        return { ...sec, contentItems: updatedItems };
+      });
+      return { ...p, sections: updatedSections };
+    });
+    onUpdateBlueprint({ ...blueprint, pages: updatedPages });
+  };
+
+  const handleDeleteItem = (
+    pageId: string,
+    sectionId: string,
+    itemIdx: number
+  ) => {
+    const updatedPages = blueprint.pages.map((p) => {
+      if (p.id !== pageId) return p;
+      const updatedSections = p.sections.map((sec) => {
+        if (sec.id !== sectionId || !sec.contentItems) return sec;
+        const updatedItems = sec.contentItems.filter((_, idx) => idx !== itemIdx);
+        return { ...sec, contentItems: updatedItems };
+      });
+      return { ...p, sections: updatedSections };
+    });
+    onUpdateBlueprint({ ...blueprint, pages: updatedPages });
+  };
+
+  // Multiple File Upload Handler (JPG, JPEG, PNG, WEBP)
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const validFiles = Array.from(files).filter(file =>
+      file.type.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/i.test(file.name)
+    );
+
+    if (validFiles.length === 0) {
+      setUploadNotice('Per favore seleziona file immagine in formato JPG, JPEG, PNG o WEBP.');
+      setTimeout(() => setUploadNotice(null), 4000);
+      return;
+    }
+
+    let loadedCount = 0;
+    const newPhotos: string[] = [];
+
+    validFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          const resultUrl = event.target.result as string;
+          newPhotos.push(resultUrl);
+        }
+        loadedCount++;
+        if (loadedCount === validFiles.length) {
+          setUserUploadedPhotos((prev) => [...newPhotos, ...prev]);
+          setGeneratedHistory((prev) => [...newPhotos, ...prev].slice(0, 12));
+          setUploadNotice(`Caricate con successo ${newPhotos.length} foto in formato JPG!`);
+          setTimeout(() => setUploadNotice(null), 4000);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Direct Product Item Photo Upload
+  const handleUploadItemPhotoDirect = (
+    pageId: string,
+    sectionId: string,
+    itemIdx: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/') && !/\.(jpg|jpeg|png|webp)$/i.test(file.name)) {
+      alert('Formato non supportato. Carica un file immagine in formato .jpg, .jpeg, .png o .webp.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        const resultUrl = event.target.result as string;
+        handleUpdateItemImage(pageId, sectionId, itemIdx, resultUrl);
+        setUserUploadedPhotos((prev) => [resultUrl, ...prev.filter(p => p !== resultUrl)]);
+        setGeneratedHistory((prev) => [resultUrl, ...prev.filter(p => p !== resultUrl)]);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAssignPhotoToProduct = (photoUrl: string, targetValue: string) => {
+    if (!targetValue) return;
+    const [pageId, sectionId, itemIdxStr] = targetValue.split('|');
+    const itemIdx = parseInt(itemIdxStr, 10);
+    if (!isNaN(itemIdx)) {
+      handleUpdateItemImage(pageId, sectionId, itemIdx, photoUrl);
+      setUploadNotice('Foto JPG assegnata con successo al prodotto selezionato!');
+      setTimeout(() => setUploadNotice(null), 3000);
+    }
+  };
+
+  const handleDeleteUserPhoto = (photoUrl: string) => {
+    setUserUploadedPhotos((prev) => prev.filter(p => p !== photoUrl));
+    setGeneratedHistory((prev) => prev.filter(p => p !== photoUrl));
   };
 
   const getIconForPage = (iconName: string) => {
@@ -713,38 +872,113 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
                             {sec.contentItems.map((item, itemIdx) => (
                               <div
                                 key={itemIdx}
-                                className="p-2.5 rounded-lg bg-[#2a2a28] flex items-center justify-between text-xs gap-2"
+                                className="p-3 rounded-xl bg-[#2a2a28] space-y-2 text-xs border border-[#3c4a42]/40 shadow-sm"
                               >
-                                <div className="truncate">
-                                  <span className="font-semibold text-[#e5e2df] block truncate">
-                                    {item.title}
-                                  </span>
-                                  {item.subtitle && (
-                                    <span className="text-[10px] text-[#bbcabf] truncate block">
-                                      {item.subtitle}
-                                    </span>
-                                  )}
+                                <div className="flex items-start gap-2.5">
+                                  {/* Product JPG Photo Thumbnail / Upload Trigger */}
+                                  <div className="shrink-0">
+                                    {item.image ? (
+                                      <div className="w-12 h-12 rounded-lg overflow-hidden border border-[#10b981]/60 relative group">
+                                        <img
+                                          src={item.image}
+                                          alt={item.title}
+                                          className="w-full h-full object-cover"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => handleUpdateItemImage(page.id, sec.id, itemIdx, '')}
+                                          className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-rose-400"
+                                          title="Rimuovi Foto Prodotto"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <label
+                                        className="w-12 h-12 rounded-lg border border-dashed border-[#10b981]/50 hover:border-[#10b981] bg-[#1c1c1a] hover:bg-[#10b981]/10 flex flex-col items-center justify-center text-[#10b981] cursor-pointer transition-all p-1 text-center"
+                                        title="Carica Foto JPG per questo Prodotto"
+                                      >
+                                        <Camera className="w-4 h-4 mb-0.5" />
+                                        <span className="text-[8px] font-extrabold uppercase">Foto JPG</span>
+                                        <input
+                                          type="file"
+                                          accept="image/jpeg,image/jpg,image/png,image/webp"
+                                          onChange={(e) => handleUploadItemPhotoDirect(page.id, sec.id, itemIdx, e)}
+                                          className="hidden"
+                                        />
+                                      </label>
+                                    )}
+                                  </div>
+
+                                  {/* Title & Subtitle Inputs */}
+                                  <div className="flex-1 space-y-1 min-w-0">
+                                    <input
+                                      type="text"
+                                      value={item.title}
+                                      onChange={(e) => handleUpdateItemTitle(page.id, sec.id, itemIdx, e.target.value)}
+                                      className="w-full bg-[#1c1c1a] border border-[#3c4a42] rounded-lg px-2 py-1 text-xs font-bold text-white focus:outline-none focus:border-[#10b981]"
+                                      placeholder="Nome Prodotto / Servizio"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={item.subtitle || ''}
+                                      onChange={(e) => handleUpdateItemSubtitle(page.id, sec.id, itemIdx, e.target.value)}
+                                      className="w-full bg-[#1c1c1a] border border-[#3c4a42] rounded-lg px-2 py-1 text-[11px] text-[#bbcabf] focus:outline-none focus:border-[#10b981]"
+                                      placeholder="Descrizione o ingredienti..."
+                                    />
+                                  </div>
+
+                                  {/* Price & Delete Button */}
+                                  <div className="flex flex-col items-end gap-1 shrink-0">
+                                    {item.price !== undefined && (
+                                      <input
+                                        type="text"
+                                        value={item.price}
+                                        onChange={(e) => handleUpdateItemPrice(page.id, sec.id, itemIdx, e.target.value)}
+                                        className="w-20 bg-[#1c1c1a] border border-[#3c4a42] rounded-lg px-2 py-1 text-right text-xs font-bold text-[#10b981] focus:outline-none focus:border-[#10b981]"
+                                        placeholder="€ 0.00"
+                                      />
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteItem(page.id, sec.id, itemIdx)}
+                                      className="p-1 rounded text-gray-500 hover:text-rose-400 transition-colors"
+                                      title="Elimina Prodotto"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
                                 </div>
 
-                                {item.price !== undefined && (
-                                  <input
-                                    type="text"
-                                    value={item.price}
-                                    onChange={(e) =>
-                                      handleUpdateItemPrice(page.id, sec.id, itemIdx, e.target.value)
-                                    }
-                                    className="w-20 bg-[#1c1c1a] border border-[#3c4a42] rounded px-2 py-1 text-right text-xs font-bold text-[#10b981] focus:outline-none focus:border-[#10b981]"
-                                  />
+                                {/* Pick from uploaded gallery photos */}
+                                {userUploadedPhotos.length > 0 && !item.image && (
+                                  <div className="flex items-center gap-1.5 pt-1.5 border-t border-white/5 text-[10px]">
+                                    <span className="text-[#bbcabf] font-semibold">Scegli da foto caricate:</span>
+                                    <div className="flex gap-1 overflow-x-auto scrollbar-none py-0.5">
+                                      {userUploadedPhotos.map((photo, pIdx) => (
+                                        <button
+                                          key={pIdx}
+                                          type="button"
+                                          onClick={() => handleUpdateItemImage(page.id, sec.id, itemIdx, photo)}
+                                          className="w-6 h-6 rounded overflow-hidden border border-white/20 hover:border-[#10b981] shrink-0 active:scale-95 transition-all"
+                                          title="Assegna questa foto JPG"
+                                        >
+                                          <img src={photo} alt="Foto JPG" className="w-full h-full object-cover" />
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
                                 )}
                               </div>
                             ))}
 
                             <button
+                              type="button"
                               onClick={() => handleAddItem(page.id, sec.id)}
                               className="w-full py-2 border border-dashed border-[#3c4a42] rounded-lg text-xs text-[#35dec1] hover:bg-[#35dec1]/10 transition-colors flex items-center justify-center gap-1 font-medium mt-1"
                             >
                               <Plus className="w-3.5 h-3.5" />
-                              <span>Aggiungi Voce o Servizio</span>
+                              <span>Aggiungi Voce o Prodotto</span>
                             </button>
                           </div>
                         )}
@@ -756,6 +990,120 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
             );
           })}
         </div>
+      </section>
+
+      {/* Caricamento Foto Prodotti Utente (JPG / PNG) */}
+      <section className="bg-[#1c1c1a] border border-[#3c4a42] rounded-2xl p-4 space-y-4 shadow-xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-[#35dec1]/20 text-[#35dec1] flex items-center justify-center shrink-0">
+              <Upload className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+                <span>Caricamento Foto Prodotti (JPG / PNG)</span>
+                <span className="bg-[#35dec1]/20 text-[#35dec1] text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase border border-[#35dec1]/40">
+                  Importazione Foto
+                </span>
+              </h3>
+              <p className="text-[11px] text-[#bbcabf]">
+                Carica le tue foto reali in formato JPG/PNG per il menù, il listino o la copertina
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {uploadNotice && (
+          <div className="p-3 rounded-xl bg-[#10b981]/20 border border-[#10b981]/40 text-[#10b981] text-xs font-semibold flex items-center gap-2 animate-fadeIn">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{uploadNotice}</span>
+          </div>
+        )}
+
+        {/* Dropzone & File Input */}
+        <label className="border-2 border-dashed border-[#3c4a42] hover:border-[#35dec1] bg-[#131312] hover:bg-[#35dec1]/5 rounded-xl p-5 flex flex-col items-center justify-center text-center cursor-pointer transition-all group">
+          <div className="w-12 h-12 rounded-full bg-[#2a2a28] group-hover:bg-[#35dec1]/20 group-hover:scale-110 transition-all flex items-center justify-center text-[#35dec1] mb-2">
+            <Camera className="w-6 h-6" />
+          </div>
+          <span className="text-xs font-bold text-white mb-1">
+            Trascina qui le tue foto prodotto o <span className="text-[#35dec1] underline">Sfoglia File</span>
+          </span>
+          <span className="text-[10px] text-[#86948a]">
+            Supporta file in formato .jpg, .jpeg, .png e .webp (caricamento multiplo)
+          </span>
+          <input
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/webp"
+            multiple
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+        </label>
+
+        {/* Gallery of Uploaded Photos with Product Assignment */}
+        {userUploadedPhotos.length > 0 && (
+          <div className="space-y-2 pt-2 border-t border-[#3c4a42]/40">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-[#86948a] uppercase tracking-wider block">
+                Le tue Foto Caricate ({userUploadedPhotos.length}):
+              </span>
+              <span className="text-[10px] text-[#bbcabf]">Assegna subito alle voci del listino</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {userUploadedPhotos.map((photo, idx) => (
+                <div key={idx} className="bg-[#2a2a28] rounded-xl p-2 border border-[#3c4a42]/50 space-y-2 group">
+                  <div className="relative aspect-video rounded-lg overflow-hidden bg-black/40">
+                    <img src={photo} alt={`Foto Utente ${idx + 1}`} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteUserPhoto(photo)}
+                      className="absolute top-1 right-1 p-1 rounded-full bg-black/70 text-rose-400 hover:text-rose-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Elimina Foto"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="absolute bottom-1 left-1 bg-black/70 text-emerald-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded">
+                      JPG Utente
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => handleApplyToHero(photo)}
+                      className="w-full py-1 rounded-lg bg-[#3c4a42] hover:bg-[#10b981] text-white font-bold transition-colors flex items-center justify-center gap-1"
+                    >
+                      <ImageIcon className="w-3 h-3" />
+                      <span>Applica a Copertina</span>
+                    </button>
+
+                    {/* Dropdown to assign photo to product */}
+                    <select
+                      defaultValue=""
+                      onChange={(e) => {
+                        handleAssignPhotoToProduct(photo, e.target.value);
+                        e.target.value = '';
+                      }}
+                      className="w-full bg-[#1c1c1a] border border-[#3c4a42] text-[#bbcabf] hover:text-white rounded-lg px-2 py-1 text-[10px] focus:outline-none focus:border-[#10b981]"
+                    >
+                      <option value="" disabled>➡️ Assegna a Prodotto...</option>
+                      {blueprint.pages.flatMap((page) =>
+                        page.sections.flatMap((sec) =>
+                          (sec.contentItems || []).map((item, itemIdx) => (
+                            <option key={`${page.id}|${sec.id}|${itemIdx}`} value={`${page.id}|${sec.id}|${itemIdx}`}>
+                              [{page.title}] {item.title} ({item.price || 'Senza prezzo'})
+                            </option>
+                          ))
+                        )
+                      )}
+                    </select>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* AI Image Studio & Professional Placeholder Generator */}

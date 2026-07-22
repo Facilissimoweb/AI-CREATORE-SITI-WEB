@@ -609,11 +609,21 @@ export const FullscreenPreview: React.FC<FullscreenPreviewProps> = ({
                               key={idx}
                               className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs gap-2"
                             >
-                              <div>
-                                <span className="font-bold block">{item.title}</span>
-                                {item.subtitle && (
-                                  <span className="text-[10px] opacity-70 block">{item.subtitle}</span>
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                {item.image && (
+                                  <img
+                                    src={item.image}
+                                    alt={item.title}
+                                    className="w-10 h-10 rounded-lg object-cover shrink-0 border border-white/20"
+                                    referrerPolicy="no-referrer"
+                                  />
                                 )}
+                                <div className="min-w-0">
+                                  <span className="font-bold block truncate">{item.title}</span>
+                                  {item.subtitle && (
+                                    <span className="text-[10px] opacity-70 block truncate">{item.subtitle}</span>
+                                  )}
+                                </div>
                               </div>
                               {item.price && (
                                 <span
