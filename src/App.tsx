@@ -9,6 +9,7 @@ import { DesignerModal } from './components/DesignerModal';
 import { ExportGuideModal } from './components/ExportGuideModal';
 import { ChatAssistantModal } from './components/ChatAssistantModal';
 import { ModelingStudioModal } from './components/ModelingStudioModal';
+import { SubscriptionPlans } from './components/SubscriptionPlans';
 import { WebsiteBlueprint, BusinessCategory, GoalOption } from './types';
 import { DEFAULT_PIZZERIA, DEFAULT_CONSULTANT, DEFAULT_ARTISAN } from './data/defaultTemplates';
 
@@ -23,6 +24,8 @@ export default function App() {
   const [isExportGuideOpen, setIsExportGuideOpen] = useState(false);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [isModelingStudioOpen, setIsModelingStudioOpen] = useState(false);
+  const [isSubscriptionPlansOpen, setIsSubscriptionPlansOpen] = useState(false);
+  const [isProUnlocked, setIsProUnlocked] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Sync dark mode class with HTML element
@@ -124,6 +127,7 @@ export default function App() {
         onOpenExportGuide={() => setIsExportGuideOpen(true)}
         onOpenChatModal={() => setIsChatModalOpen(true)}
         onOpenModelingStudio={() => setIsModelingStudioOpen(true)}
+        onOpenSubscriptionPlans={() => setIsSubscriptionPlansOpen(true)}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
       />
@@ -239,6 +243,20 @@ export default function App() {
         <ExportGuideModal
           blueprint={blueprint}
           onClose={() => setIsExportGuideOpen(false)}
+          onOpenSubscriptionPlans={() => setIsSubscriptionPlansOpen(true)}
+        />
+      )}
+
+      {/* Subscription Plans Modal */}
+      {isSubscriptionPlansOpen && (
+        <SubscriptionPlans
+          blueprint={blueprint}
+          isUnlocked={isProUnlocked}
+          onPlanUnlocked={(planName) => {
+            setIsProUnlocked(true);
+            showToast(`🎉 Piano ${planName} attivato con successo! Funzionalità sbloccate.`);
+          }}
+          onClose={() => setIsSubscriptionPlansOpen(false)}
         />
       )}
     </div>

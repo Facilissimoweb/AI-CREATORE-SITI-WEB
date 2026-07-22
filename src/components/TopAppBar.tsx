@@ -1,11 +1,12 @@
 import React from 'react';
-import { Bolt, Sparkles, Smartphone, Moon, Sun, Download, Bot, Sliders } from 'lucide-react';
+import { Bolt, Sparkles, Smartphone, Moon, Sun, Download, Bot, Sliders, Crown } from 'lucide-react';
 
 interface TopAppBarProps {
   onOpenFullscreen: () => void;
   onOpenExportGuide: () => void;
   onOpenChatModal?: () => void;
   onOpenModelingStudio?: () => void;
+  onOpenSubscriptionPlans?: () => void;
   darkMode: boolean;
   onToggleDarkMode: () => void;
 }
@@ -15,6 +16,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   onOpenExportGuide,
   onOpenChatModal,
   onOpenModelingStudio,
+  onOpenSubscriptionPlans,
   darkMode,
   onToggleDarkMode,
 }) => {
@@ -30,6 +32,17 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
       </div>
 
       <div className="flex items-center gap-1.5">
+        {onOpenSubscriptionPlans && (
+          <button
+            onClick={onOpenSubscriptionPlans}
+            className="bg-[#10b981] hover:bg-[#059669] text-[#003824] px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1 transition-all active:scale-95 shadow-md"
+            title="Piani & Abbonamenti Pro"
+          >
+            <Crown className="w-3.5 h-3.5 fill-current" />
+            <span className="hidden sm:inline">Piani Pro</span>
+          </button>
+        )}
+
         {onOpenChatModal && (
           <button
             onClick={onOpenChatModal}

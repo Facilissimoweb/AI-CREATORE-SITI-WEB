@@ -18,7 +18,8 @@ import {
   FolderArchive,
   Layers,
   Zap,
-  Loader2
+  Loader2,
+  Crown
 } from 'lucide-react';
 import { WebsiteBlueprint } from '../types';
 import { deployToVercel, VercelDeployResult } from '../services/vercelDeploymentService';
@@ -26,11 +27,13 @@ import { deployToVercel, VercelDeployResult } from '../services/vercelDeployment
 interface ExportGuideModalProps {
   blueprint: WebsiteBlueprint;
   onClose: () => void;
+  onOpenSubscriptionPlans?: () => void;
 }
 
 export const ExportGuideModal: React.FC<ExportGuideModalProps> = ({
   blueprint,
   onClose,
+  onOpenSubscriptionPlans,
 }) => {
   const [activeTab, setActiveTab] = useState<'download' | 'instructions' | 'vercel' | 'keys'>('vercel');
   const [copiedCode, setCopiedCode] = useState(false);
@@ -279,10 +282,21 @@ Per qualsiasi modifica a immagini, menu o numeri WhatsApp, puoi ricontattare la 
 
         {/* Modal Header */}
         <div className="space-y-1 pr-6">
-          <h3 className="font-bold text-base text-[#e5e2df] flex items-center gap-2">
-            <FolderArchive className="w-5 h-5 text-[#10b981]" />
-            <span>Pubblicazione & Messa Online</span>
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-base text-[#e5e2df] flex items-center gap-2">
+              <FolderArchive className="w-5 h-5 text-[#10b981]" />
+              <span>Pubblicazione & Messa Online</span>
+            </h3>
+            {onOpenSubscriptionPlans && (
+              <button
+                onClick={onOpenSubscriptionPlans}
+                className="px-2.5 py-1 bg-[#10b981] hover:bg-[#059669] text-[#003824] rounded-full font-bold text-[11px] flex items-center gap-1 shadow transition-transform active:scale-95"
+              >
+                <Crown className="w-3.5 h-3.5 fill-current" />
+                <span>Piani Pro</span>
+              </button>
+            )}
+          </div>
           <p className="text-xs text-[#bbcabf]">
             Gestisci la pubblicazione in abbonamento SaaS oppure la vendita del codice standalone.
           </p>
