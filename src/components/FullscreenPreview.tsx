@@ -14,7 +14,11 @@ import {
   Star,
   Send,
   Lock,
-  ArrowLeft
+  ArrowLeft,
+  Menu,
+  Home,
+  Layers,
+  Globe
 } from 'lucide-react';
 import { WebsiteBlueprint } from '../types';
 
@@ -33,6 +37,7 @@ export const FullscreenPreview: React.FC<FullscreenPreviewProps> = ({
   const [bookingTime, setBookingTime] = useState('20:00');
   const [bookingPersons, setBookingPersons] = useState('2');
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [isAppMenuOpen, setIsAppMenuOpen] = useState(false);
 
   const currentPage =
     blueprint.pages.find((p) => p.slug === activePageSlug) || blueprint.pages[0];
@@ -87,27 +92,89 @@ export const FullscreenPreview: React.FC<FullscreenPreviewProps> = ({
           </div>
         </div>
 
-        {/* Client Site Navigation Tabs */}
-        <div className="bg-[#131312] border-b border-white/10 px-2 py-1.5 flex justify-around shrink-0">
-          {blueprint.pages.map((p) => {
-            const isActive = activePageSlug === p.slug;
-            return (
-              <button
-                key={p.id}
-                onClick={() => {
-                  setActivePageSlug(p.slug);
-                  setBookingConfirmed(false);
-                }}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                  isActive
-                    ? 'bg-[#10b981] text-[#003824] shadow'
-                    : 'text-[#bbcabf] hover:text-[#e5e2df]'
-                }`}
-              >
-                {p.title}
-              </button>
-            );
-          })}
+        {/* Client Site Sticky Top Header & Nav Bar */}
+        <div className="sticky top-0 z-30 bg-[#131312]/95 backdrop-blur-md border-b border-white/10 px-3 py-2 flex items-center justify-between shrink-0 relative">
+          {/* Brand Name */}
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-pulse" />
+            <span className="font-extrabold text-xs text-white truncate max-w-[170px]">
+              {blueprint.businessName}
+            </span>
+          </div>
+
+          {/* Quick Tabs & Hamburger Dropdown Button */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setIsAppMenuOpen(!isAppMenuOpen)}
+              className="px-2.5 py-1 bg-[#2a2a28] hover:bg-[#3c4a42] text-white rounded-lg text-xs font-bold flex items-center gap-1 border border-white/10 active:scale-95 transition-all"
+            >
+              {isAppMenuOpen ? <X className="w-3.5 h-3.5 text-[#10b981]" /> : <Menu className="w-3.5 h-3.5 text-[#10b981]" />}
+              <span>Menù</span>
+            </button>
+          </div>
+
+          {/* Hamburger Dropdown Menu with Icons */}
+          {isAppMenuOpen && (
+            <div className="absolute top-11 right-2 w-56 bg-[#1a1a18]/98 backdrop-blur-xl border border-white/20 rounded-2xl p-2 shadow-2xl z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150">
+              <div className="px-2 py-1 border-b border-white/10 mb-1">
+                <span className="text-[10px] font-bold text-[#bbcabf] uppercase tracking-wider">
+                  Navigazione Pagine & Servizi
+                </span>
+              </div>
+
+              {blueprint.pages.map((p, idx) => {
+                const isActive = activePageSlug === p.slug;
+                const pageIcons = [<Home className="w-3.5 h-3.5" />, <Layers className="w-3.5 h-3.5" />, <Utensils className="w-3.5 h-3.5" />, <Globe className="w-3.5 h-3.5" />];
+                const IconComponent = pageIcons[idx % pageIcons.length];
+
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      setActivePageSlug(p.slug);
+                      setBookingConfirmed(false);
+                      setIsAppMenuOpen(false);
+                    }}
+                    className={`w-full px-2.5 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition-all ${
+                      isActive
+                        ? 'bg-[#10b981] text-[#003824] shadow'
+                        : 'text-[#e5e2df] hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {IconComponent}
+                      <span>{p.title}</span>
+                    </div>
+                    {isActive && <Check className="w-3.5 h-3.5" />}
+                  </button>
+                );
+              })}
+
+              <div className="border-t border-white/10 pt-1 mt-1 space-y-1">
+                <button
+                  onClick={() => {
+                    setIsAppMenuOpen(false);
+                    const el = document.getElementById('booking-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="w-full px-2.5 py-2 rounded-xl text-xs font-bold text-[#35dec1] hover:bg-white/10 flex items-center gap-2 transition-all"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Prenota Ora Online</span>
+                </button>
+
+                <a
+                  href={generateWhatsAppUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full px-2.5 py-2 rounded-xl text-xs font-bold text-[#25D366] hover:bg-white/10 flex items-center gap-2 transition-all"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                  <span>Apri Chat WhatsApp</span>
+                </a>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Main Client Site Body */}

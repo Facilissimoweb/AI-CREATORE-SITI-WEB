@@ -406,13 +406,37 @@ app.post("/api/deploy-vercel", async (req, res) => {
   </style>
 </head>
 <body class="min-h-screen pb-28">
-  <header class="p-4 border-b border-white/10 bg-black/60 sticky top-0 backdrop-blur-md z-40 flex justify-between items-center max-w-md mx-auto">
+  <header class="p-3 border-b border-white/10 bg-black/80 sticky top-0 backdrop-blur-md z-50 max-w-md mx-auto relative flex justify-between items-center">
     <div class="font-bold text-base flex items-center gap-2" style="color: ${blueprint.colors?.primary || '#10b981'}">
+      <span class="w-2.5 h-2.5 rounded-full bg-[#10b981] inline-block"></span>
       <span>${blueprint.businessName}</span>
     </div>
-    <a href="https://wa.me/${blueprint.whatsapp}" target="_blank" class="px-3 py-1 rounded-full font-bold text-xs bg-[#25D366] text-white">
-      WhatsApp
-    </a>
+    <div class="flex items-center gap-2">
+      <a href="https://wa.me/${blueprint.whatsapp}" target="_blank" class="px-2.5 py-1 rounded-full font-bold text-xs bg-[#25D366] text-white flex items-center gap-1">
+        <span>💬</span> <span>WhatsApp</span>
+      </a>
+      <button onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="p-1.5 rounded-lg bg-white/10 text-white font-bold text-xs flex items-center gap-1 border border-white/10">
+        <span>🍔</span> <span>Menù</span>
+      </button>
+    </div>
+    <!-- Hamburger Dropdown Menu -->
+    <div id="mobileMenu" class="hidden absolute top-12 right-3 w-56 bg-[#1a1a18]/98 border border-white/20 rounded-2xl p-3 shadow-2xl z-50 space-y-2 text-xs backdrop-blur-xl">
+      <div class="font-bold text-[10px] text-gray-400 uppercase tracking-wider pb-1 border-b border-white/10">
+        Navigazione Rapida
+      </div>
+      <a href="#" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="block p-2 rounded-xl bg-white/5 hover:bg-white/10 font-bold flex items-center gap-2 text-white">
+        <span>🏠</span> <span>Home Page</span>
+      </a>
+      <a href="#services" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="block p-2 rounded-xl hover:bg-white/10 font-bold flex items-center gap-2 text-white">
+        <span>📋</span> <span>Servizi e Menù</span>
+      </a>
+      <a href="#booking" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="block p-2 rounded-xl hover:bg-white/10 font-bold flex items-center gap-2 text-emerald-400">
+        <span>📅</span> <span>Prenota Online</span>
+      </a>
+      <a href="https://wa.me/${blueprint.whatsapp}" target="_blank" class="block p-2 rounded-xl hover:bg-white/10 font-bold flex items-center gap-2 text-[#25D366]">
+        <span>💬</span> <span>Chat WhatsApp</span>
+      </a>
+    </div>
   </header>
   <main class="max-w-md mx-auto p-4 space-y-6">
     <div class="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-3 text-center">
