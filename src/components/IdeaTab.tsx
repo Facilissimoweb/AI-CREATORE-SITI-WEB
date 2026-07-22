@@ -132,16 +132,16 @@ export const IdeaTab: React.FC<IdeaTabProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e0d] via-transparent to-transparent" />
           <div className="absolute bottom-3 left-3 bg-[#6700c9]/80 backdrop-blur-md px-3 py-1 rounded-full text-xs font-medium text-[#cfacff] flex items-center gap-1.5 border border-[#6700c9]">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Studio Smart Engine</span>
+            <span>AI Web App Engine</span>
           </div>
         </div>
 
         <div>
           <h2 className="text-xl font-bold text-[#e5e2df] leading-snug">
-            Il tuo sito web perfetto, creato senza complicazioni.
+            La tua Web App Mobile First perfetta, creata in secondi.
           </h2>
           <p className="text-sm text-[#bbcabf] mt-1.5 leading-relaxed">
-            Nessuna conoscenza tecnica richiesta. Pensiamo a tutto noi con l'AI, dall'idea alla pubblicazione.
+            Nessuna conoscenza tecnica richiesta. Pensiamo a tutto noi con l'AI: struttura responsive, WhatsApp e prenotazioni rapide.
           </p>
         </div>
       </section>

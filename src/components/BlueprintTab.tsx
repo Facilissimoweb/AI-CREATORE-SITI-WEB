@@ -21,7 +21,9 @@ import {
   Save,
   Download,
   Key,
-  FileCode
+  FileCode,
+  Bot,
+  Sliders
 } from 'lucide-react';
 import { WebsiteBlueprint, SitePage } from '../types';
 import { ExportGuideModal } from './ExportGuideModal';
@@ -31,6 +33,8 @@ interface BlueprintTabProps {
   onUpdateBlueprint: (updated: WebsiteBlueprint) => void;
   onOpenDesignerModal: () => void;
   onOpenFullscreen: () => void;
+  onOpenChatModal?: () => void;
+  onOpenModelingStudio?: () => void;
 }
 
 export const BlueprintTab: React.FC<BlueprintTabProps> = ({
@@ -38,6 +42,8 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
   onUpdateBlueprint,
   onOpenDesignerModal,
   onOpenFullscreen,
+  onOpenChatModal,
+  onOpenModelingStudio,
 }) => {
   const [openPageId, setOpenPageId] = useState<string>('home');
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -113,7 +119,7 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
       <div className="bg-[#1c1c1a] p-3 rounded-2xl border border-[#3c4a42]/30 space-y-2">
         <div className="flex justify-between items-center px-1">
           <span className="text-xs font-semibold text-[#10b981]">Passo 3 di 3</span>
-          <span className="text-xs text-[#bbcabf]">Il Tuo Sito & Pagine</span>
+          <span className="text-xs text-[#bbcabf]">La Tua Web App Mobile First</span>
         </div>
         <div className="h-2.5 w-full bg-[#2a2a28] rounded-full overflow-hidden">
           <div className="h-full bg-[#10b981] w-full transition-all duration-700 ease-out" />
@@ -122,27 +128,50 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
 
       {/* Header Section */}
       <section className="space-y-1">
-        <h2 className="text-xl font-bold text-[#e5e2df]">Ecco la tua struttura ideale</h2>
+        <h2 className="text-xl font-bold text-[#e5e2df]">Struttura della tua Web App Mobile First</h2>
         <p className="text-xs text-[#bbcabf] leading-relaxed">
           Abbiamo generato la bozza su misura per <strong>{blueprint.businessName}</strong> a {blueprint.city}.
         </p>
       </section>
 
+      {/* Quick Launch Copilota & Studio Action Bar */}
+      <div className="grid grid-cols-2 gap-2">
+        {onOpenChatModal && (
+          <button
+            onClick={onOpenChatModal}
+            className="p-3 bg-[#6700c9] hover:bg-[#5800ac] text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+          >
+            <Bot className="w-4 h-4 text-[#cfacff]" />
+            <span>Copilota AI Chat</span>
+          </button>
+        )}
+
+        {onOpenModelingStudio && (
+          <button
+            onClick={onOpenModelingStudio}
+            className="p-3 bg-[#10b981]/20 hover:bg-[#10b981]/30 border border-[#10b981]/60 text-[#10b981] rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+          >
+            <Sliders className="w-4 h-4" />
+            <span>Plancia Modellazione</span>
+          </button>
+        )}
+      </div>
+
       {/* Garanzia Facilissimo Badge Card */}
       <div className="bg-[#6700c9]/10 border-2 border-[#6700c9]/30 rounded-2xl p-4 text-center space-y-2 shadow-md">
         <div className="flex items-center justify-center gap-1.5 text-[#cfacff]">
           <ShieldCheck className="w-5 h-5 text-[#35dec1]" />
-          <span className="text-xs font-bold uppercase tracking-wider">Garanzia Facilissimo</span>
+          <span className="text-xs font-bold uppercase tracking-wider">Garanzia Facilissimo Web App</span>
         </div>
         <p className="text-sm font-semibold text-[#e5e2df]">
-          100% Mobile Ready • Zero Complicazioni • Pronta in 48h
+          100% Mobile First • WhatsApp e Prenotazioni • Pronta in 48h
         </p>
       </div>
 
       {/* Interactive Site Outline (Page Accordions) */}
       <section className="space-y-3">
         <h3 className="text-xs font-semibold text-[#86948a] uppercase tracking-widest block">
-          Struttura delle Pagine del Sito
+          Pagine della Web App ({blueprint.pages.length})
         </h3>
 
         <div className="space-y-3">
@@ -249,10 +278,10 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-4">
             <div>
               <span className="bg-[#10b981] text-[#003824] font-bold text-[10px] px-2 py-0.5 rounded uppercase tracking-wider">
-                Stile "Paper & Glass"
+                Web App Mobile First
               </span>
               <p className="text-white font-bold text-sm mt-1">
-                Layout responsive testato su smartphone iOS ed Android
+                Layout responsive ottimizzato per smartphone iOS e Android
               </p>
             </div>
           </div>
@@ -283,7 +312,7 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
             className="h-12 border border-[#6700c9] text-[#cfacff] hover:bg-[#6700c9]/20 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 transition-colors active:scale-98"
           >
             <Eye className="w-4 h-4 text-[#35dec1]" />
-            <span>Sito Live</span>
+            <span>Web App Live</span>
           </button>
         </div>
       </div>

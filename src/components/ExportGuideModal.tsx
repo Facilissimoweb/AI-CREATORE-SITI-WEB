@@ -15,9 +15,13 @@ import {
   CreditCard,
   CheckCircle,
   ShieldCheck,
-  FolderArchive
+  FolderArchive,
+  Layers,
+  Zap,
+  Loader2
 } from 'lucide-react';
 import { WebsiteBlueprint } from '../types';
+import { deployToVercel, VercelDeployResult } from '../services/vercelDeploymentService';
 
 interface ExportGuideModalProps {
   blueprint: WebsiteBlueprint;
@@ -28,17 +32,34 @@ export const ExportGuideModal: React.FC<ExportGuideModalProps> = ({
   blueprint,
   onClose,
 }) => {
-  const [activeTab, setActiveTab] = useState<'download' | 'instructions' | 'keys'>('download');
+  const [activeTab, setActiveTab] = useState<'download' | 'instructions' | 'vercel' | 'keys'>('vercel');
   const [copiedCode, setCopiedCode] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  
+  // Vercel deployment state
+  const [vercelDeploying, setVercelDeploying] = useState(false);
+  const [vercelResult, setVercelResult] = useState<VercelDeployResult | null>(null);
 
   const clientSlug = (blueprint.businessName || 'cliente-yyy')
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '-')
     .replace(/-+/g, '-');
+
+  const handleVercelDeploy = async () => {
+    setVercelDeploying(true);
+    try {
+      const res = await deployToVercel(blueprint);
+      setVercelResult(res);
+    } catch (err) {
+      console.error('Vercel deployment error:', err);
+    } finally {
+      setVercelDeploying(false);
+    }
+  };
+
 
   const handlePublishHostedSite = async () => {
     setPublishing(true);
@@ -267,46 +288,124 @@ Per qualsiasi modifica a immagini, menu o numeri WhatsApp, puoi ricontattare la 
           </p>
         </div>
         {/* Tab Selection */}
-        <div className="flex bg-[#0e0e0d] p-1 rounded-2xl border border-[#3c4a42]/40 text-xs font-semibold">
+        <div className="flex bg-[#0e0e0d] p-1 rounded-2xl border border-[#3c4a42]/40 text-xs font-semibold overflow-x-auto no-scrollbar">
+          <button
+            onClick={() => setActiveTab('vercel')}
+            className={`flex-1 min-w-[120px] py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+              activeTab === 'vercel'
+                ? 'bg-[#10b981] text-[#003824] shadow font-bold'
+                : 'text-[#bbcabf] hover:text-[#e5e2df]'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5 text-[#003824]" />
+            <span>Vercel 1-Click</span>
+          </button>
+
           <button
             onClick={() => setActiveTab('instructions')}
-            className={`flex-1 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 min-w-[120px] py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
               activeTab === 'instructions'
-                ? 'bg-[#10b981] text-[#003824] shadow'
+                ? 'bg-[#10b981] text-[#003824] shadow font-bold'
                 : 'text-[#bbcabf] hover:text-[#e5e2df]'
             }`}
           >
             <Globe className="w-3.5 h-3.5" />
-            <span>Messa Online SaaS (Abbonamento)</span>
+            <span>SaaS Gestito</span>
           </button>
 
           <button
             onClick={() => setActiveTab('download')}
-            className={`flex-1 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 min-w-[120px] py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
               activeTab === 'download'
-                ? 'bg-[#10b981] text-[#003824] shadow'
+                ? 'bg-[#10b981] text-[#003824] shadow font-bold'
                 : 'text-[#bbcabf] hover:text-[#e5e2df]'
             }`}
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Vendita Codice Standalone</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('keys')}
-            className={`flex-1 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
-              activeTab === 'keys'
-                ? 'bg-[#10b981] text-[#003824] shadow'
-                : 'text-[#bbcabf] hover:text-[#e5e2df]'
-            }`}
-          >
-            <Key className="w-3.5 h-3.5" />
-            <span>Regole Commerciali</span>
+            <span>Codice Zip</span>
           </button>
         </div>
 
         {/* Tab Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-1 text-xs text-[#e5e2df]">
+          
+          {/* TAB: VERCEL DEPLOYMENT UTILITY */}
+          {activeTab === 'vercel' && (
+            <div className="space-y-3">
+              <div className="p-4 rounded-2xl bg-[#0e0e0d] border border-[#3c4a42]/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-white font-bold text-sm">
+                    <Zap className="w-5 h-5 text-[#10b981]" />
+                    <span>Integrazione Vercel API & Staging Link</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-[#10b981]/20 text-[#10b981] text-[10px] font-bold">
+                    AUTOMATICO
+                  </span>
+                </div>
+                <p className="text-[#bbcabf] text-[11px] leading-relaxed">
+                  Genera dinamicamente un sottodominio / link di staging per consentire al tuo cliente di visualizzare la sua <strong>Web App Mobile First</strong> su qualsiasi smartphone.
+                </p>
+                <div className="p-2.5 bg-[#1c1c1a] rounded-xl border border-[#3c4a42]/40 text-[11px] font-mono text-[#35dec1]">
+                  facilissimo-webapp-{clientSlug}.vercel.app
+                </div>
+              </div>
+
+              {!vercelResult ? (
+                <button
+                  onClick={handleVercelDeploy}
+                  disabled={vercelDeploying}
+                  className="w-full py-3.5 bg-[#10b981] hover:bg-[#059669] text-[#003824] font-bold rounded-2xl flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-lg text-xs"
+                >
+                  {vercelDeploying ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Connessione a Vercel & Generazione Link in corso...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      <span>🚀 Genera Link Pubblico Staging / Vercel per il Cliente</span>
+                    </>
+                  )}
+                </button>
+              ) : (
+                <div className="p-4 rounded-2xl bg-[#10b981]/15 border-2 border-[#10b981] space-y-3 animate-in fade-in duration-300">
+                  <div className="flex items-center gap-2 text-[#10b981] font-bold">
+                    <CheckCircle className="w-5 h-5 shrink-0" />
+                    <span>Link di Staging / Vercel Generato con Successo!</span>
+                  </div>
+                  <p className="text-xs text-[#bbcabf] leading-relaxed">
+                    {vercelResult.message}
+                  </p>
+                  
+                  <div className="p-3 bg-black/60 rounded-xl border border-white/10 font-mono text-xs text-[#10b981] break-all">
+                    {vercelResult.deploymentUrl}
+                  </div>
+
+                  <a
+                    href={vercelResult.deploymentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 bg-[#10b981] text-[#003824] font-bold rounded-xl flex items-center justify-center gap-2 text-xs shadow-md hover:bg-[#059669] transition-all"
+                  >
+                    <span>Apri Link Web App Mobile First</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              )}
+
+              <div className="p-3.5 rounded-2xl bg-[#0e0e0d] border border-[#3c4a42]/40 space-y-1.5 text-[11px] text-[#bbcabf]">
+                <span className="font-bold text-white flex items-center gap-1">
+                  <Key className="w-3.5 h-3.5 text-[#10b981]" />
+                  <span>Configurazione Chiave Vercel API</span>
+                </span>
+                <p>
+                  Per pubblicare direttamente sul tuo account Vercel personale o di agenzia, inserisci <code>VERCEL_TOKEN</code> nelle variabili d'ambiente di Vercel/AI Studio.
+                </p>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'instructions' && (
             <div className="space-y-3">
               <div className="p-4 rounded-2xl bg-[#10b981]/10 border border-[#10b981]/40 space-y-2">

@@ -7,6 +7,8 @@ import { BlueprintTab } from './components/BlueprintTab';
 import { FullscreenPreview } from './components/FullscreenPreview';
 import { DesignerModal } from './components/DesignerModal';
 import { ExportGuideModal } from './components/ExportGuideModal';
+import { ChatAssistantModal } from './components/ChatAssistantModal';
+import { ModelingStudioModal } from './components/ModelingStudioModal';
 import { WebsiteBlueprint, BusinessCategory, GoalOption } from './types';
 import { DEFAULT_PIZZERIA, DEFAULT_CONSULTANT, DEFAULT_ARTISAN } from './data/defaultTemplates';
 
@@ -19,6 +21,8 @@ export default function App() {
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [isDesignerModalOpen, setIsDesignerModalOpen] = useState(false);
   const [isExportGuideOpen, setIsExportGuideOpen] = useState(false);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [isModelingStudioOpen, setIsModelingStudioOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Sync dark mode class with HTML element
@@ -59,20 +63,20 @@ export default function App() {
       const data = await response.json();
       if (data.success && data.blueprint) {
         setBlueprint(data.blueprint);
-        showToast("✨ Progetto generato con successo dall'AI!");
+        showToast("✨ Web App generata con successo dall'AI!");
       } else {
         // Fallback gracefully to category defaults if offline or API delay
         if (category === 'consulente') setBlueprint({ ...DEFAULT_CONSULTANT, city });
         else if (category === 'artigiano') setBlueprint({ ...DEFAULT_ARTISAN, city });
         else setBlueprint({ ...DEFAULT_PIZZERIA, city });
-        showToast("✨ Progetto personalizzato pronto!");
+        showToast("✨ Web App personalizzata pronta!");
       }
     } catch (err) {
       console.warn("Using template fallback for generation:", err);
       if (category === 'consulente') setBlueprint({ ...DEFAULT_CONSULTANT, city });
       else if (category === 'artigiano') setBlueprint({ ...DEFAULT_ARTISAN, city });
       else setBlueprint({ ...DEFAULT_PIZZERIA, city });
-      showToast("✨ Progetto personalizzato pronto!");
+      showToast("✨ Web App personalizzata pronta!");
     } finally {
       setIsGenerating(false);
     }
@@ -96,13 +100,13 @@ export default function App() {
         if (resData.data.updatedBlueprint) {
           setBlueprint(resData.data.updatedBlueprint);
         }
-        showToast(`🤖 ${resData.data.replyText || 'Stile aggiornato dall\'AI!'}`);
+        showToast(`🤖 ${resData.data.replyText || 'Web App aggiornata dall\'AI!'}`);
       } else {
-        showToast("✨ Stile aggiornato con successo!");
+        showToast("✨ Web App aggiornata con successo!");
       }
     } catch (err) {
       console.warn("AI Chat fallback error:", err);
-      showToast("✨ Stile aggiornato!");
+      showToast("✨ Web App aggiornata!");
     } finally {
       setIsProcessingChat(false);
     }
@@ -118,6 +122,8 @@ export default function App() {
       <TopAppBar
         onOpenFullscreen={() => setIsFullscreenOpen(true)}
         onOpenExportGuide={() => setIsExportGuideOpen(true)}
+        onOpenChatModal={() => setIsChatModalOpen(true)}
+        onOpenModelingStudio={() => setIsModelingStudioOpen(true)}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
       />
@@ -150,14 +156,16 @@ export default function App() {
             onUpdateBlueprint={setBlueprint}
             onOpenDesignerModal={() => setIsDesignerModalOpen(true)}
             onOpenFullscreen={() => setIsFullscreenOpen(true)}
+            onOpenChatModal={() => setIsChatModalOpen(true)}
+            onOpenModelingStudio={() => setIsModelingStudioOpen(true)}
           />
         )}
 
         {activeTab === 'preview' && (
           <div className="space-y-4 text-center py-6">
-            <h2 className="text-xl font-bold">Anteprima Live del Sito Web</h2>
+            <h2 className="text-xl font-bold">Anteprima Live Web App Mobile First</h2>
             <p className="text-xs text-[#bbcabf]">
-              Esplora come appare e funziona il tuo sito multi-pagina su un dispositivo reale!
+              Esplora come appare e funziona la tua Web App su dispositivi iOS e Android!
             </p>
             <button
               onClick={() => setIsFullscreenOpen(true)}
@@ -186,6 +194,28 @@ export default function App() {
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[120] bg-[#6700c9] text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-xl border border-white/20 animate-in fade-in slide-in-from-top-3 max-w-[90vw] text-center">
           {toastMessage}
         </div>
+      )}
+
+      {/* Copilota AI Chat Modal */}
+      {isChatModalOpen && (
+        <ChatAssistantModal
+          blueprint={blueprint}
+          onUpdateBlueprint={setBlueprint}
+          onSendStyleChat={handleSendStyleChat}
+          isProcessingChat={isProcessingChat}
+          onClose={() => setIsChatModalOpen(false)}
+          onOpenFullscreen={() => setIsFullscreenOpen(true)}
+        />
+      )}
+
+      {/* Plancia di Modellazione Studio Modal */}
+      {isModelingStudioOpen && (
+        <ModelingStudioModal
+          blueprint={blueprint}
+          onUpdateBlueprint={setBlueprint}
+          onClose={() => setIsModelingStudioOpen(false)}
+          onOpenFullscreen={() => setIsFullscreenOpen(true)}
+        />
       )}
 
       {/* Fullscreen Interactive Site Preview */}

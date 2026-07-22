@@ -340,7 +340,7 @@ export const StyleTab: React.FC<StyleTabProps> = ({
           onClick={onNextStep}
           className="w-full h-14 bg-[#10b981] hover:bg-[#059669] text-[#003824] rounded-full font-bold text-sm transition-all flex items-center justify-center gap-2 active:scale-98 shadow-lg shadow-[#10b981]/20"
         >
-          <span>Vedi la Struttura Completa del Sito</span>
+          <span>Vedi la Struttura della Web App Mobile First</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </section>

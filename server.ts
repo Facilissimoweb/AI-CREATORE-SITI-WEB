@@ -13,19 +13,39 @@ app.use(express.json());
 
 // Initialize Gemini Client
 const getGeminiClient = () => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey =
+    process.env.GEMINI_API_KEY ||
+    process.env.VITE_GEMINI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    "";
   if (!apiKey) {
-    console.warn("GEMINI_API_KEY is not defined in environment variables.");
+    console.warn(
+      "GEMINI_API_KEY / VITE_GEMINI_API_KEY is missing from environment variables."
+    );
   }
   return new GoogleGenAI({
-    apiKey: apiKey || "",
+    apiKey,
     httpOptions: {
       headers: {
-        "User-Agent": "aistudio-build",
+        "User-Agent": "aistudio-build-facilissimo-webapp",
       },
     },
   });
 };
+
+// Health & Environment API Check
+app.get("/api/health", (req, res) => {
+  const apiKey =
+    process.env.GEMINI_API_KEY ||
+    process.env.VITE_GEMINI_API_KEY ||
+    process.env.GOOGLE_API_KEY;
+  res.json({
+    status: "ok",
+    platform: "Facilissimo Web App Studio",
+    hasApiKey: !!apiKey,
+    keyPrefix: apiKey ? `${apiKey.substring(0, 6)}...` : "not_configured"
+  });
+});
 
 // API Endpoint 1: Generate Full Multi-page Website Blueprint
 app.post("/api/generate-blueprint", async (req, res) => {
@@ -325,6 +345,145 @@ app.get("/api/published-sites", (req, res) => {
   }));
   return res.json({ success: true, count: list.length, sites: list });
 });
+
+// API Endpoint 5: Vercel Dynamic Subdomain & Staging Deployment Service
+app.post("/api/deploy-vercel", async (req, res) => {
+  try {
+    const { blueprint } = req.body;
+    if (!blueprint || !blueprint.businessName) {
+      return res.status(400).json({ success: false, error: "Blueprint non valido" });
+    }
+
+    const cleanSlug = (blueprint.businessName || "webapp")
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-");
+
+    const projectName = `facilissimo-webapp-${cleanSlug}`;
+
+    // Store in internal memory store for fallback or staging preview
+    publishedSitesStore[cleanSlug] = {
+      ...blueprint,
+      publishedAt: new Date().toISOString(),
+      status: "active"
+    };
+
+    // Generate standalone Web App Mobile First HTML
+    const htmlContent = `<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${blueprint.businessName} - Web App Mobile First</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: ${blueprint.colors?.background || '#131312'}; color: ${blueprint.colors?.text || '#e5e2df'}; }
+  </style>
+</head>
+<body class="min-h-screen pb-28">
+  <header class="p-4 border-b border-white/10 bg-black/60 sticky top-0 backdrop-blur-md z-40 flex justify-between items-center max-w-md mx-auto">
+    <div class="font-bold text-base flex items-center gap-2" style="color: ${blueprint.colors?.primary || '#10b981'}">
+      <span>${blueprint.businessName}</span>
+    </div>
+    <a href="https://wa.me/${blueprint.whatsapp}" target="_blank" class="px-3 py-1 rounded-full font-bold text-xs bg-[#25D366] text-white">
+      WhatsApp
+    </a>
+  </header>
+  <main class="max-w-md mx-auto p-4 space-y-6">
+    <div class="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-3 text-center">
+      <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-white/10 text-emerald-400">
+        ${blueprint.city || 'Italia'}
+      </span>
+      <h1 class="text-2xl font-black">${blueprint.businessName}</h1>
+      <p class="text-sm opacity-80">${blueprint.tagline || blueprint.description || ''}</p>
+    </div>
+    ${(blueprint.pages?.[0]?.sections || []).map((sec: any) => `
+      <div class="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-3">
+        <h2 class="font-bold text-base" style="color: ${blueprint.colors?.primary || '#10b981'}">${sec.title}</h2>
+        <p class="text-xs opacity-75">${sec.description}</p>
+        <div class="space-y-2">
+          ${(sec.contentItems || []).map((item: any) => `
+            <div class="p-3 rounded-2xl bg-black/30 border border-white/5 flex justify-between items-center text-xs">
+              <div>
+                <span class="font-bold">${item.title}</span>
+                <p class="text-[10px] opacity-60">${item.subtitle || ''}</p>
+              </div>
+              <span class="font-bold text-emerald-400">${item.price || ''}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+  </main>
+  <footer class="fixed bottom-0 left-0 right-0 p-3 bg-black/90 backdrop-blur-md border-t border-white/10 flex flex-col items-center gap-1.5 z-50">
+    <a href="https://wa.me/${blueprint.whatsapp}" target="_blank" class="w-full max-w-md py-3 rounded-full text-center font-bold text-xs text-white bg-[#25D366]">
+      💬 WhatsApp Direct (${blueprint.phone || ''})
+    </a>
+  </footer>
+</body>
+</html>`;
+
+    const vercelToken = process.env.VERCEL_TOKEN || process.env.VERCEL_API_KEY;
+
+    if (vercelToken) {
+      // Call Vercel REST API v13 Deployments Endpoint
+      const vercelRes = await fetch("https://api.vercel.com/v13/deployments", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${vercelToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: projectName,
+          public: true,
+          files: [
+            {
+              file: "index.html",
+              data: htmlContent
+            }
+          ],
+          projectSettings: {
+            framework: null
+          }
+        })
+      });
+
+      const vercelData = await vercelRes.json();
+      if (vercelRes.ok && vercelData.url) {
+        const fullVercelUrl = `https://${vercelData.url}`;
+        return res.json({
+          success: true,
+          isRealVercel: true,
+          deploymentUrl: fullVercelUrl,
+          projectId: vercelData.projectId,
+          projectName: projectName,
+          message: `Web App Mobile First pubblicata direttamente su Vercel: ${fullVercelUrl}`
+        });
+      } else {
+        console.warn("Vercel API returned non-OK or error:", vercelData);
+      }
+    }
+
+    // Fallback if VERCEL_TOKEN is not configured: serve via Facilissimo Web App staging route
+    const protocol = req.headers["x-forwarded-proto"] || "http";
+    const host = req.headers.host || `localhost:${PORT}`;
+    const localStagingUrl = `${protocol}://${host}/site/${cleanSlug}`;
+
+    return res.json({
+      success: true,
+      isRealVercel: false,
+      deploymentUrl: localStagingUrl,
+      projectName: projectName,
+      message: `Web App Mobile First pronta sul link pubblico di staging: ${localStagingUrl}. (Configura VERCEL_TOKEN in Vercel/AI Studio per la pubblicazione automatica in 1-Click sul tuo account Vercel).`
+    });
+  } catch (error: any) {
+    console.error("Vercel deployment error:", error);
+    return res.status(500).json({ success: false, error: error?.message || "Deployment failed" });
+  }
+});
+
 
 // Route: Serve Standalone Client Web App at /site/:clientSlug
 app.get("/site/:clientSlug", (req, res) => {
