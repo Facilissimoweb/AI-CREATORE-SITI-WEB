@@ -74,6 +74,48 @@ export const ProDashboard: React.FC<ProDashboardProps> = ({
   const [pushMessage, setPushMessage] = useState('');
   const [pushSent, setPushSent] = useState(false);
 
+  // Live Traffic Simulation State
+  const [liveVisitors, setLiveVisitors] = useState<number>(14);
+  const [isLiveActive, setIsLiveActive] = useState(true);
+  const [reportExported, setReportExported] = useState(false);
+  const [liveLogs, setLiveLogs] = useState<Array<{ id: string; time: string; action: string; location: string; device: string; icon: string }>>([
+    { id: '1', time: 'Proprio ora', action: 'Prenotazione Tavolo inviata', location: 'Milano', device: 'iPhone 15', icon: '📅' },
+    { id: '2', time: '1 min fa', action: 'Aperta chat WhatsApp', location: 'Roma', device: 'Android', icon: '💬' },
+    { id: '3', time: '3 min fa', action: 'Visualizzato Menù / Servizi', location: 'Napoli', device: 'iPhone 14', icon: '👁️' },
+    { id: '4', time: '5 min fa', action: 'Scansionato QR Code Tavolo', location: 'Torino', device: 'Android', icon: '📱' },
+  ]);
+
+  // Simulate periodic live traffic fluctuations
+  React.useEffect(() => {
+    if (!isLiveActive) return;
+    const interval = setInterval(() => {
+      setLiveVisitors((prev) => {
+        const delta = Math.floor(Math.random() * 5) - 2;
+        return Math.max(8, Math.min(28, prev + delta));
+      });
+
+      // Randomly push new live activity event
+      const possibleEvents = [
+        { action: 'Consultato Menù Online', location: 'Milano', device: 'iOS App', icon: '🍕' },
+        { action: 'Richiesta Info WhatsApp', location: 'Bologna', device: 'Mobile', icon: '💬' },
+        { action: 'Nuovo click indicazioni Mappa', location: 'Firenze', device: 'Android', icon: '📍' },
+        { action: 'Prenotazione ricevuta', location: 'Verona', device: 'Chrome Desktop', icon: '✅' },
+      ];
+
+      if (Math.random() > 0.4) {
+        const randomEv = possibleEvents[Math.floor(Math.random() * possibleEvents.length)];
+        const newLog = {
+          id: Date.now().toString(),
+          time: 'Proprio ora',
+          ...randomEv,
+        };
+        setLiveLogs((prev) => [newLog, ...prev.slice(0, 4)]);
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [isLiveActive]);
+
   // Clean slug for URLs
   const cleanSlug = (blueprint.businessName || 'webapp')
     .toLowerCase()
@@ -378,27 +420,88 @@ export const ProDashboard: React.FC<ProDashboardProps> = ({
         {activeTab === 'analytics' && (
           <div className="space-y-4 overflow-y-auto pr-1 max-h-[60vh]">
             
-            {/* Timeframe Filter Bar */}
-            <div className="flex justify-between items-center bg-[#131312] p-2.5 rounded-2xl border border-[#3c4a42]/40 text-xs">
-              <span className="font-bold text-[#bbcabf] flex items-center gap-1.5">
-                <Filter className="w-3.5 h-3.5 text-[#10b981]" />
-                <span>Intervallo Temporale Grafici</span>
-              </span>
-              <div className="flex gap-1">
-                {(['7d', '30d', '90d', '1y'] as const).map((t) => (
+            {/* Top Bar: Live Traffic Radar + Timeframe & Export */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              
+              {/* Live Traffic Radar Widget */}
+              <div className="md:col-span-2 bg-[#131312] border border-[#10b981]/40 p-3.5 rounded-2xl flex flex-col justify-between relative overflow-hidden">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="relative flex items-center justify-center w-8 h-8 rounded-xl bg-[#10b981]/20 text-[#10b981]">
+                      <Activity className="w-4 h-4 animate-pulse" />
+                      {isLiveActive && (
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#10b981] animate-ping" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-black text-sm">Radar Traffico Live</span>
+                        <span className="text-[10px] bg-[#10b981]/20 text-[#10b981] font-bold px-2 py-0.5 rounded-full border border-[#10b981]/40">
+                          {isLiveActive ? 'IN TEMPO REALE' : 'PAUSA'}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-[#bbcabf] block">
+                        Attività utenti attivi sulla Web App in questo istante
+                      </span>
+                    </div>
+                  </div>
+
                   <button
-                    key={t}
-                    onClick={() => setTimeframe(t)}
-                    className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all ${
-                      timeframe === t
-                        ? 'bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/40'
-                        : 'text-[#bbcabf] hover:text-white'
-                    }`}
+                    onClick={() => setIsLiveActive(!isLiveActive)}
+                    className="px-2.5 py-1 rounded-lg bg-[#2a2a28] hover:bg-[#3c4a42] text-[#bbcabf] hover:text-white text-[11px] font-bold transition-all shrink-0"
                   >
-                    {t.toUpperCase()}
+                    {isLiveActive ? 'Pausa Radar' : 'Riprendi Radar'}
                   </button>
-                ))}
+                </div>
+
+                <div className="mt-3 flex items-center justify-between bg-black/40 p-2.5 rounded-xl border border-white/5">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-black text-[#10b981]">{liveVisitors}</span>
+                    <span className="text-xs font-bold text-white">utenti connessi ora</span>
+                  </div>
+                  <div className="text-right text-[10px] text-[#bbcabf]">
+                    <span className="text-emerald-400 font-bold block">94% da Smartphone</span>
+                    <span>Latenza server: 18ms</span>
+                  </div>
+                </div>
               </div>
+
+              {/* Timeframe Filter & Report Export */}
+              <div className="bg-[#131312] border border-[#3c4a42]/40 p-3.5 rounded-2xl flex flex-col justify-between text-xs space-y-2">
+                <div>
+                  <span className="font-bold text-white block mb-1 flex items-center gap-1.5">
+                    <Filter className="w-3.5 h-3.5 text-[#10b981]" />
+                    <span>Filtro Temporale Grafici</span>
+                  </span>
+                  <div className="grid grid-cols-4 gap-1 mt-1.5">
+                    {(['7d', '30d', '90d', '1y'] as const).map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setTimeframe(t)}
+                        className={`py-1 rounded-lg font-bold text-[10px] text-center transition-all ${
+                          timeframe === t
+                            ? 'bg-[#10b981] text-[#003824] shadow-sm'
+                            : 'bg-[#2a2a28] text-[#bbcabf] hover:text-white'
+                        }`}
+                      >
+                        {t.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setReportExported(true);
+                    setTimeout(() => setReportExported(false), 3000);
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-[#35dec1] hover:bg-[#20bca3] text-[#003824] font-black text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-md"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>{reportExported ? 'Report PDF Generato!' : 'Esporta Report Analytics'}</span>
+                </button>
+              </div>
+
             </div>
 
             {/* Main Area Chart */}
@@ -422,7 +525,7 @@ export const ProDashboard: React.FC<ProDashboardProps> = ({
                 </div>
               </div>
 
-              <div className="h-56 w-full pt-2">
+              <div className="h-52 w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trafficData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
@@ -465,6 +568,94 @@ export const ProDashboard: React.FC<ProDashboardProps> = ({
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
+            </div>
+
+            {/* Live Event Stream Feed & Top Pages Breakdown */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              
+              {/* Real-time Activity Stream Feed */}
+              <div className="bg-[#131312] border border-[#3c4a42]/40 p-3.5 rounded-2xl space-y-2">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-bold text-xs text-white flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#10b981]" />
+                    <span>Feed Eventi in Tempo Reale</span>
+                  </h4>
+                  <span className="text-[10px] text-[#bbcabf]">Ultimi 5 minuti</span>
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  {liveLogs.map((log) => (
+                    <div key={log.id} className="flex items-center justify-between p-2 rounded-xl bg-black/40 border border-white/5 text-[11px] animate-in fade-in duration-200">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">{log.icon}</span>
+                        <div>
+                          <span className="font-bold text-white block">{log.action}</span>
+                          <span className="text-[10px] text-[#bbcabf]">
+                            Città: {log.location} • Dispositivo: {log.device}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-[#10b981] bg-[#10b981]/10 px-2 py-0.5 rounded-full shrink-0">
+                        {log.time}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Top Pages Performance & Estimated Value */}
+              <div className="bg-[#131312] border border-[#3c4a42]/40 p-3.5 rounded-2xl space-y-2">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-bold text-xs text-white flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5 text-[#35dec1]" />
+                    <span>Pagine Più Visitate & Valore Generato</span>
+                  </h4>
+                  <span className="text-[10px] text-emerald-400 font-bold">Stima Valore: € 3.420</span>
+                </div>
+
+                <div className="space-y-2 pt-1 text-[11px]">
+                  <div className="p-2 rounded-xl bg-black/40 border border-white/5 space-y-1">
+                    <div className="flex justify-between font-bold text-white">
+                      <span>/ (Home Page Principale)</span>
+                      <span className="text-[#10b981]">9.580 visite (52%)</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-[#2a2a28] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#10b981] rounded-full w-[52%]" />
+                    </div>
+                  </div>
+
+                  <div className="p-2 rounded-xl bg-black/40 border border-white/5 space-y-1">
+                    <div className="flex justify-between font-bold text-white">
+                      <span>/menu (Menù Digitale / Listino)</span>
+                      <span className="text-[#35dec1]">5.160 visite (28%)</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-[#2a2a28] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#35dec1] rounded-full w-[28%]" />
+                    </div>
+                  </div>
+
+                  <div className="p-2 rounded-xl bg-black/40 border border-white/5 space-y-1">
+                    <div className="flex justify-between font-bold text-white">
+                      <span>/prenota (Prenotazioni Online)</span>
+                      <span className="text-[#cfacff]">2.580 visite (14%)</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-[#2a2a28] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#cfacff] rounded-full w-[14%]" />
+                    </div>
+                  </div>
+
+                  <div className="p-2 rounded-xl bg-black/40 border border-white/5 space-y-1">
+                    <div className="flex justify-between font-bold text-white">
+                      <span>/contatti (Contatto Diretto WhatsApp)</span>
+                      <span className="text-[#6700c9]">1.100 visite (6%)</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-[#2a2a28] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#6700c9] rounded-full w-[6%]" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
 
             {/* Secondary Charts: Source & Devices */}
