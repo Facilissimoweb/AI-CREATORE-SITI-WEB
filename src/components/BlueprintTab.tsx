@@ -18,9 +18,13 @@ import {
   MessageCircle,
   Clock,
   MapPin,
-  Save
+  Save,
+  Download,
+  Key,
+  FileCode
 } from 'lucide-react';
 import { WebsiteBlueprint, SitePage } from '../types';
+import { ExportGuideModal } from './ExportGuideModal';
 
 interface BlueprintTabProps {
   blueprint: WebsiteBlueprint;
@@ -36,7 +40,7 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
   onOpenFullscreen,
 }) => {
   const [openPageId, setOpenPageId] = useState<string>('home');
-  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const toggleAccordion = (pageId: string) => {
     setOpenPageId(openPageId === pageId ? '' : pageId);
@@ -258,21 +262,39 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
       {/* Action Bottom Sheet Controls */}
       <div className="bg-[#1c1c1a] rounded-2xl p-4 space-y-3 border border-[#3c4a42]/40 shadow-2xl">
         <button
-          onClick={onOpenDesignerModal}
+          onClick={() => setIsExportModalOpen(true)}
           className="w-full h-14 bg-[#10b981] hover:bg-[#059669] text-[#003824] rounded-full font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-98 shadow-lg shadow-[#10b981]/20"
         >
-          <Headphones className="w-5 h-5" />
-          <span>Parla con il tuo Designer Dedicato</span>
+          <Download className="w-5 h-5" />
+          <span>Scarica Prodotto Finale & Guida Messa On-Line</span>
         </button>
 
-        <button
-          onClick={onOpenFullscreen}
-          className="w-full h-12 border-2 border-[#6700c9] text-[#cfacff] hover:bg-[#6700c9]/20 rounded-full font-bold text-xs flex items-center justify-center gap-2 transition-colors active:scale-98"
-        >
-          <Eye className="w-4 h-4 text-[#35dec1]" />
-          <span>Esplora il Sito Live ed Interattivo</span>
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={onOpenDesignerModal}
+            className="h-12 bg-[#2a2a28] hover:bg-[#3c4a42] text-[#e5e2df] rounded-full font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-98"
+          >
+            <Headphones className="w-4 h-4 text-[#10b981]" />
+            <span>Designer Dedicato</span>
+          </button>
+
+          <button
+            onClick={onOpenFullscreen}
+            className="h-12 border border-[#6700c9] text-[#cfacff] hover:bg-[#6700c9]/20 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 transition-colors active:scale-98"
+          >
+            <Eye className="w-4 h-4 text-[#35dec1]" />
+            <span>Sito Live</span>
+          </button>
+        </div>
       </div>
+
+      {/* Export & Online Guide Modal */}
+      {isExportModalOpen && (
+        <ExportGuideModal
+          blueprint={blueprint}
+          onClose={() => setIsExportModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

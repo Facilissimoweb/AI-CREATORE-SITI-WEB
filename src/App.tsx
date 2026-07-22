@@ -6,6 +6,7 @@ import { StyleTab } from './components/StyleTab';
 import { BlueprintTab } from './components/BlueprintTab';
 import { FullscreenPreview } from './components/FullscreenPreview';
 import { DesignerModal } from './components/DesignerModal';
+import { ExportGuideModal } from './components/ExportGuideModal';
 import { WebsiteBlueprint, BusinessCategory, GoalOption } from './types';
 import { DEFAULT_PIZZERIA, DEFAULT_CONSULTANT, DEFAULT_ARTISAN } from './data/defaultTemplates';
 
@@ -17,6 +18,7 @@ export default function App() {
   const [isProcessingChat, setIsProcessingChat] = useState(false);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [isDesignerModalOpen, setIsDesignerModalOpen] = useState(false);
+  const [isExportGuideOpen, setIsExportGuideOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Sync dark mode class with HTML element
@@ -115,6 +117,7 @@ export default function App() {
       {/* Top Bar */}
       <TopAppBar
         onOpenFullscreen={() => setIsFullscreenOpen(true)}
+        onOpenExportGuide={() => setIsExportGuideOpen(true)}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
       />
@@ -198,6 +201,14 @@ export default function App() {
         <DesignerModal
           blueprint={blueprint}
           onClose={() => setIsDesignerModalOpen(false)}
+        />
+      )}
+
+      {/* Export & Online Guide Modal */}
+      {isExportGuideOpen && (
+        <ExportGuideModal
+          blueprint={blueprint}
+          onClose={() => setIsExportGuideOpen(false)}
         />
       )}
     </div>

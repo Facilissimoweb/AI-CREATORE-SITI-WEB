@@ -228,6 +228,218 @@ ${JSON.stringify(currentBlueprint || {})}
   }
 });
 
+// In-Memory Database for Client Published Sites
+const publishedSitesStore: Record<string, any> = {};
+
+// Default demo client site hosted on FacilissimoWeb
+publishedSitesStore["cliente-yyy"] = {
+  businessName: "Ristorante Cliente YYY",
+  category: "ristorante",
+  city: "Milano",
+  tagline: "Cucina Tipica Milanese e Pizza Artigianale",
+  description: "Ingredienti freschi a km zero, forno a legna e ambiente accogliente nel cuore di Milano.",
+  heroImageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
+  primaryGoal: "prenotazione",
+  colors: {
+    primary: "#10b981",
+    secondary: "#6700c9",
+    background: "#131312",
+    surface: "#1c1c1a",
+    text: "#e5e2df"
+  },
+  phone: "+39 02 9876543",
+  whatsapp: "39029876543",
+  address: "Corso Buenos Aires 45, Milano",
+  openingHours: "Mar - Dom: 12:00 - 23:00",
+  pages: [
+    {
+      id: "home",
+      title: "Home",
+      slug: "/",
+      subtitle: "Benvenuti da Cliente YYY",
+      sections: [
+        {
+          id: "hero",
+          title: "Gusto Autentico Ogni Giorno",
+          description: "Prenota il tuo tavolo direttamente online o contattaci su WhatsApp.",
+          type: "hero"
+        }
+      ]
+    },
+    {
+      id: "servizi",
+      title: "Menu & Specialità",
+      slug: "/servizi",
+      subtitle: "I Nostri Piatti Forti",
+      sections: [
+        {
+          id: "menu",
+          title: "Primi e Pizze",
+          description: "Preparati al momento dai nostri chef",
+          type: "services",
+          contentItems: [
+            { title: "Risotto alla Milanese DOP", subtitle: "Zafferano puro in pistilli", price: "€ 14.00" },
+            { "title": "Pizza Margherita Speciale", subtitle: "Mozzarella di bufala e basilico", price: "€ 9.50" }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+// API Endpoint 3: Register or Update a Published Site under FacilissimoWeb Subdomain/Slug
+app.post("/api/publish-site", (req, res) => {
+  try {
+    const { slug, blueprint, subscriptionPlan } = req.body;
+    const cleanSlug = (slug || blueprint.businessName || "cliente-yyy")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-");
+
+    publishedSitesStore[cleanSlug] = {
+      ...blueprint,
+      publishedAt: new Date().toISOString(),
+      subscriptionPlan: subscriptionPlan || "abbonamento_mensile",
+      status: "active"
+    };
+
+    return res.json({
+      success: true,
+      slug: cleanSlug,
+      publicUrl: `/site/${cleanSlug}`,
+      message: `Sito pubblicato con successo su FacilissimoWeb!`
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// API Endpoint 4: List all published client sites under subscription
+app.get("/api/published-sites", (req, res) => {
+  const list = Object.entries(publishedSitesStore).map(([slug, data]) => ({
+    slug,
+    businessName: data.businessName,
+    city: data.city,
+    publishedAt: data.publishedAt || new Date().toISOString(),
+    publicUrl: `/site/${slug}`
+  }));
+  return res.json({ success: true, count: list.length, sites: list });
+});
+
+// Route: Serve Standalone Client Web App at /site/:clientSlug
+app.get("/site/:clientSlug", (req, res) => {
+  const { clientSlug } = req.params;
+  const siteData = publishedSitesStore[clientSlug] || publishedSitesStore["cliente-yyy"];
+
+  if (!siteData) {
+    return res.status(404).send("<h1>Sito non trovato su Facilissimo Web</h1>");
+  }
+
+  const html = `<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${siteData.businessName} - Sito Ufficiale (Facilissimo Web)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: ${siteData.colors?.background || '#131312'}; color: ${siteData.colors?.text || '#e5e2df'}; }
+  </style>
+</head>
+<body class="min-h-screen pb-28">
+  <!-- Top Hosted Site Banner -->
+  <div class="bg-[#10b981] text-[#003824] text-center text-xs py-1.5 px-4 font-bold flex items-center justify-center gap-2">
+    <span>🌐 Sito Ufficiale Ospitato su FacilissimoWeb.it • Abbonamento Attivo</span>
+  </div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10 p-4 flex justify-between items-center max-w-lg mx-auto">
+    <div class="flex items-center gap-2">
+      <div class="w-3 h-3 rounded-full bg-[#10b981]"></div>
+      <h1 class="text-base font-bold" style="color: ${siteData.colors?.primary || '#10b981'}">${siteData.businessName}</h1>
+    </div>
+    <a href="https://wa.me/${siteData.whatsapp}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-full text-xs font-bold text-black flex items-center gap-1" style="background-color: ${siteData.colors?.primary || '#10b981'}">
+      💬 WhatsApp
+    </a>
+  </header>
+
+  <!-- Main Web App Content -->
+  <main class="max-w-md mx-auto p-4 space-y-6">
+    <div class="relative rounded-3xl overflow-hidden shadow-2xl aspect-video border border-white/10">
+      <img src="${siteData.heroImageUrl}" alt="${siteData.businessName}" class="w-full h-full object-cover">
+      <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex items-end p-5">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#10b981] text-[#003824] mb-1 inline-block">
+            ${siteData.category?.toUpperCase() || 'ATTIVITÀ'} • ${siteData.city || 'ITALIA'}
+          </span>
+          <h2 class="text-white text-lg font-extrabold leading-snug">${siteData.tagline}</h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-2">
+      <h3 class="font-bold text-sm" style="color: ${siteData.colors?.primary || '#10b981'}">Chi Siamo</h3>
+      <p class="text-xs opacity-80 leading-relaxed">${siteData.description}</p>
+    </div>
+
+    <!-- Pages / Sections -->
+    ${(siteData.pages || []).map((page: any) => `
+      <div class="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-3">
+        <h3 class="font-bold text-sm" style="color: ${siteData.colors?.primary || '#10b981'}">${page.title}</h3>
+        <p class="text-xs opacity-70">${page.subtitle || ''}</p>
+        <div class="space-y-2 pt-1">
+          ${(page.sections || []).flatMap((sec: any) => sec.contentItems || []).map((item: any) => `
+            <div class="p-3 rounded-2xl bg-black/30 border border-white/10 flex justify-between items-center text-xs">
+              <div>
+                <span class="font-bold block text-white">${item.title}</span>
+                <span class="text-[10px] opacity-70 block">${item.subtitle || ''}</span>
+              </div>
+              <span class="font-bold text-xs px-2.5 py-1 rounded-lg bg-white/10" style="color: ${siteData.colors?.primary || '#10b981'}">${item.price || ''}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+
+    <!-- Booking Form -->
+    <div class="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-3">
+      <h3 class="font-bold text-sm" style="color: ${siteData.colors?.primary || '#10b981'}">📅 Prenotazione Diretta</h3>
+      <form onsubmit="event.preventDefault(); alert('Grazie! Richiesta inviata via WhatsApp.'); window.open('https://wa.me/${siteData.whatsapp}?text=Vorrei%20prenotare%20per%20' + encodeURIComponent(document.getElementById('bkName').value), '_blank');" class="space-y-2 text-xs">
+        <input type="text" id="bkName" required placeholder="Nome e Cognome" class="w-full bg-black/40 border border-white/20 rounded-xl px-3 py-2.5 text-white placeholder-white/40 focus:outline-none">
+        <div class="grid grid-cols-2 gap-2">
+          <input type="date" required class="bg-black/40 border border-white/20 rounded-xl px-2 py-2 text-white focus:outline-none">
+          <input type="time" required class="bg-black/40 border border-white/20 rounded-xl px-2 py-2 text-white focus:outline-none">
+        </div>
+        <button type="submit" class="w-full py-3 rounded-xl font-bold text-xs text-black transition-transform active:scale-95" style="background-color: ${siteData.colors?.primary || '#10b981'}">
+          Invia Richiesta
+        </button>
+      </form>
+    </div>
+
+    <!-- Contact Info -->
+    <div class="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-2 text-xs">
+      <h3 class="font-bold text-sm" style="color: ${siteData.colors?.primary || '#10b981'}">📍 Info e Contatti</h3>
+      <p class="opacity-90"><strong>Indirizzo:</strong> ${siteData.address || 'Via Roma'}</p>
+      <p class="opacity-90"><strong>Telefono:</strong> ${siteData.phone || ''}</p>
+      <p class="opacity-90"><strong>Orari:</strong> ${siteData.openingHours || '09:00 - 20:00'}</p>
+    </div>
+  </main>
+
+  <!-- Sticky Bottom Footer -->
+  <footer class="fixed bottom-0 left-0 right-0 p-3 bg-black/90 backdrop-blur-md border-t border-white/10 flex flex-col items-center gap-1.5 z-50">
+    <a href="https://wa.me/${siteData.whatsapp}" target="_blank" rel="noopener" class="w-full max-w-md py-3 rounded-full text-center font-bold text-xs text-white bg-[#25D366] shadow-xl hover:bg-[#20ba5a] transition-all flex items-center justify-center gap-2">
+      💬 WhatsApp (${siteData.phone || ''})
+    </a>
+    <span class="text-[10px] text-gray-400">Piattaforma © Facilissimo Web • Servizio Gestito SaaS</span>
+  </footer>
+</body>
+</html>`;
+
+  return res.send(html);
+});
+
 async function startServer() {
   // API routes setup above
 
