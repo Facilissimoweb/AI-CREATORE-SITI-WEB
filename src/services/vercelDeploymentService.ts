@@ -19,6 +19,10 @@ export async function deployToVercel(blueprint: WebsiteBlueprint): Promise<Verce
       body: JSON.stringify({ blueprint }),
     });
 
+    if (!response.ok) {
+      throw new Error(`Server returned HTTP status ${response.status}`);
+    }
+
     const data = await response.json();
     if (data.success) {
       return {

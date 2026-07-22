@@ -65,6 +65,10 @@ export default function App() {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error(`Server status ${response.status}`);
+      }
+
       const data = await response.json();
       if (data.success && data.blueprint) {
         setBlueprint(data.blueprint);
@@ -99,6 +103,10 @@ export default function App() {
           currentBlueprint: blueprint,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`Server status ${response.status}`);
+      }
 
       const resData = await response.json();
       if (resData.success && resData.data) {
