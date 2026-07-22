@@ -12,6 +12,7 @@ import { ModelingStudioModal } from './components/ModelingStudioModal';
 import { SubscriptionPlans } from './components/SubscriptionPlans';
 import { SeoMetaModal } from './components/SeoMetaModal';
 import { ProDashboard } from './components/ProDashboard';
+import { OnboardingTour } from './components/OnboardingTour';
 import { WebsiteBlueprint, BusinessCategory, GoalOption } from './types';
 import { DEFAULT_PIZZERIA, DEFAULT_CONSULTANT, DEFAULT_ARTISAN } from './data/defaultTemplates';
 
@@ -32,6 +33,7 @@ export default function App() {
   const [isSeoModalOpen, setIsSeoModalOpen] = useState(false);
   const [isProDashboardOpen, setIsProDashboardOpen] = useState(false);
   const [isProUnlocked, setIsProUnlocked] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Sync dark mode class with HTML element
@@ -57,6 +59,19 @@ export default function App() {
       }
     } catch (e) {
       console.warn("Could not load saved blueprint:", e);
+    }
+  }, []);
+
+  // Trigger guided onboarding tour on first launch
+  useEffect(() => {
+    try {
+      const tourSeen = localStorage.getItem('facilissimoweb_tour_seen');
+      if (!tourSeen) {
+        const timer = setTimeout(() => setIsTourOpen(true), 600);
+        return () => clearTimeout(timer);
+      }
+    } catch (e) {
+      console.warn("Could not check tour flag:", e);
     }
   }, []);
 
@@ -199,6 +214,7 @@ export default function App() {
         onOpenSubscriptionPlans={() => setIsSubscriptionPlansOpen(true)}
         onOpenSeoModal={() => setIsSeoModalOpen(true)}
         onOpenProDashboard={() => setIsProDashboardOpen(true)}
+        onOpenTour={() => setIsTourOpen(true)}
         isProUnlocked={isProUnlocked}
         canUndo={historyStack.length > 0}
         undoCount={historyStack.length}
@@ -365,6 +381,14 @@ export default function App() {
           onOpenExportGuide={() => setIsExportGuideOpen(true)}
         />
       )}
+
+      {/* Onboarding Interactive Guided Tour */}
+      <OnboardingTour
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+        onSelectTab={(tab) => setActiveTab(tab)}
+        onOpenFullscreenPreview={() => setIsFullscreenOpen(true)}
+      />
     </div>
   );
 }

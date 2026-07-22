@@ -19,7 +19,8 @@ import {
   ChevronRight,
   Undo2,
   Save,
-  Check
+  Check,
+  HelpCircle
 } from 'lucide-react';
 
 interface TopAppBarProps {
@@ -30,6 +31,7 @@ interface TopAppBarProps {
   onOpenSubscriptionPlans?: () => void;
   onOpenSeoModal?: () => void;
   onOpenProDashboard?: () => void;
+  onOpenTour?: () => void;
   isProUnlocked?: boolean;
   canUndo?: boolean;
   undoCount?: number;
@@ -48,6 +50,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   onOpenSubscriptionPlans,
   onOpenSeoModal,
   onOpenProDashboard,
+  onOpenTour,
   isProUnlocked = false,
   canUndo = false,
   undoCount = 0,
@@ -208,6 +211,28 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
                   v2.5
                 </span>
               </div>
+
+              {/* Menu Item: Tour Guidato */}
+              {onOpenTour && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onOpenTour();
+                  }}
+                  className="w-full p-2.5 rounded-xl hover:bg-[#10b981]/15 text-[#e5e2df] hover:text-[#10b981] font-semibold flex items-center justify-between transition-colors group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-[#10b981]/20 text-[#10b981] flex items-center justify-center shrink-0">
+                      <HelpCircle className="w-4 h-4" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block font-bold">Tour Guidato</span>
+                      <span className="text-[10px] text-[#bbcabf] font-normal">Spiegazione passaggi app</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#bbcabf] group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
 
               {/* Menu Item: Salva Modifiche */}
               {onSave && (
