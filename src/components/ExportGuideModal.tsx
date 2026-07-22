@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import JSZip from 'jszip';
 import {
   Download,
   Key,
@@ -19,7 +20,8 @@ import {
   Layers,
   Zap,
   Loader2,
-  Crown
+  Crown,
+  FileText
 } from 'lucide-react';
 import { WebsiteBlueprint } from '../types';
 import { deployToVercel, VercelDeployResult } from '../services/vercelDeploymentService';
@@ -95,94 +97,212 @@ export const ExportGuideModal: React.FC<ExportGuideModalProps> = ({
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${blueprint.businessName} - Sito Ufficiale</title>
+  <title>${blueprint.businessName} - Web App Ufficiale</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: ${blueprint.colors.background}; color: ${blueprint.colors.text}; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: ${blueprint.colors.background || '#131312'}; color: ${blueprint.colors.text || '#ffffff'}; }
+    .nav-active { background-color: ${blueprint.colors.primary || '#10b981'} !important; color: #003824 !important; font-weight: 800 !important; }
   </style>
 </head>
-<body class="min-h-screen pb-24">
-  <!-- Top Navigation Header -->
-  <header class="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10 p-4 flex justify-between items-center max-w-lg mx-auto">
-    <div class="flex items-center gap-2">
-      <div class="w-3 h-3 rounded-full bg-[#10b981]"></div>
-      <h1 class="text-base font-bold" style="color: ${blueprint.colors.primary}">${blueprint.businessName}</h1>
+<body class="min-h-screen pb-24 relative selection:bg-[#10b981] selection:text-black">
+
+  <!-- Top Navigation Header with Hamburger Menu -->
+  <header class="sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-white/10 p-3.5 flex justify-between items-center max-w-md mx-auto">
+    <div class="flex items-center gap-2 min-w-0">
+      <div class="w-3 h-3 rounded-full bg-[#10b981] shrink-0 animate-pulse"></div>
+      <h1 class="text-sm font-extrabold truncate" style="color: ${blueprint.colors.primary || '#10b981'}">${blueprint.businessName}</h1>
     </div>
-    <a href="https://wa.me/${blueprint.whatsapp}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-full text-xs font-bold text-black flex items-center gap-1" style="background-color: ${blueprint.colors.primary}">
-      💬 WhatsApp
-    </a>
+
+    <div class="flex items-center gap-2">
+      <a href="https://wa.me/${blueprint.whatsapp}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-full text-xs font-bold text-[#003824] flex items-center gap-1 shadow-md hover:scale-105 transition-transform" style="background-color: ${blueprint.colors.primary || '#10b981'}">
+        💬 WhatsApp
+      </a>
+      <!-- Hamburger Button Toggle -->
+      <button onclick="toggleMobileMenu()" class="p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors border border-white/10 flex items-center justify-center cursor-pointer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </button>
+    </div>
   </header>
 
-  <!-- Hero Section -->
-  <main class="max-w-md mx-auto p-4 space-y-6">
-    <div class="relative rounded-3xl overflow-hidden shadow-2xl aspect-video border border-white/10">
-      <img src="${blueprint.heroImageUrl}" alt="${blueprint.businessName}" class="w-full h-full object-cover">
-      <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex items-end p-5">
+  <!-- Hamburger Drawer Mobile Overlay -->
+  <div id="mobileMenu" class="hidden fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl p-6 flex flex-col justify-between transition-all animate-in fade-in duration-200">
+    <div class="space-y-6">
+      <div class="flex items-center justify-between border-b border-white/10 pb-4">
         <div>
-          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#10b981] text-[#003824] mb-1 inline-block">
-            ${blueprint.category.toUpperCase()} • ${blueprint.city}
-          </span>
-          <h2 class="text-white text-lg font-extrabold leading-snug">${blueprint.tagline}</h2>
+          <span class="text-[10px] font-extrabold uppercase text-[#10b981] tracking-widest block">Navigazione Web App</span>
+          <h2 class="text-lg font-extrabold text-white">${blueprint.businessName}</h2>
         </div>
+        <button onclick="toggleMobileMenu()" class="p-2 rounded-full bg-white/10 text-white hover:bg-white/20">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
       </div>
-    </div>
 
-    <!-- Chi Siamo Section -->
-    <div class="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-2">
-      <h3 class="font-bold text-sm" style="color: ${blueprint.colors.primary}">Chi Siamo</h3>
-      <p class="text-xs opacity-80 leading-relaxed">${blueprint.description}</p>
-    </div>
-
-    <!-- Dynamic Pages / Services Section -->
-    ${blueprint.pages.map(page => `
-      <div class="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-3">
-        <h3 class="font-bold text-sm" style="color: ${blueprint.colors.primary}">${page.title}</h3>
-        <p class="text-xs opacity-70">${page.subtitle}</p>
-        <div class="space-y-2 pt-1">
-          ${page.sections.flatMap(sec => sec.contentItems || []).map(item => `
-            <div class="p-3 rounded-2xl bg-black/30 border border-white/10 flex justify-between items-center text-xs">
-              <div>
-                <span class="font-bold block text-white">${item.title}</span>
-                <span class="text-[10px] opacity-70 block">${item.subtitle || ''}</span>
-              </div>
-              <span class="font-bold text-xs px-2.5 py-1 rounded-lg bg-white/10" style="color: ${blueprint.colors.primary}">${item.price || ''}</span>
+      <nav class="space-y-2.5">
+        ${blueprint.pages.map((p, idx) => `
+          <button onclick="navigateToPage('${p.id}')" class="menu-item-btn w-full text-left p-4 rounded-2xl bg-white/5 hover:bg-[#10b981]/20 border border-white/10 font-bold flex items-center justify-between text-white transition-all">
+            <div class="flex items-center gap-3">
+              <span class="w-7 h-7 rounded-xl bg-[#10b981]/20 text-[#10b981] flex items-center justify-center text-xs font-black">${idx + 1}</span>
+              <span class="text-sm font-extrabold">${p.title}</span>
             </div>
-          `).join('')}
-        </div>
+            <span class="text-xs text-[#10b981]">Apri →</span>
+          </button>
+        `).join('')}
+      </nav>
+    </div>
+
+    <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-xs">
+      <p class="text-white/70">📍 ${blueprint.address || blueprint.city}</p>
+      <p class="text-white/70">📞 ${blueprint.phone}</p>
+      <a href="https://wa.me/${blueprint.whatsapp}" target="_blank" rel="noopener" class="w-full py-3 rounded-xl font-bold text-center block text-black shadow-lg" style="background-color: ${blueprint.colors.primary || '#10b981'}">
+        Contatta Diretto via WhatsApp
+      </a>
+    </div>
+  </div>
+
+  <!-- Dynamic Pages Container -->
+  <main class="max-w-md mx-auto p-4 space-y-6">
+    ${blueprint.pages.map((page, pageIdx) => `
+      <div id="page-${page.id}" class="app-page-view space-y-5 ${pageIdx === 0 ? '' : 'hidden'}">
+        
+        <!-- Page Cover Banners / Hero Image -->
+        ${page.heroImage ? `
+          <div class="relative rounded-3xl overflow-hidden shadow-2xl aspect-video border border-white/10">
+            <img src="${page.heroImage}" alt="${page.title}" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex items-end p-5">
+              <div>
+                <span class="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded bg-[#10b981] text-[#003824] mb-1 inline-block">
+                  ${page.title}
+                </span>
+                <h2 class="text-white text-lg font-extrabold leading-snug">${page.subtitle}</h2>
+              </div>
+            </div>
+          </div>
+        ` : pageIdx === 0 ? `
+          <div class="relative rounded-3xl overflow-hidden shadow-2xl aspect-video border border-white/10">
+            <img src="${blueprint.heroImageUrl}" alt="${blueprint.businessName}" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex items-end p-5">
+              <div>
+                <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[#10b981] text-[#003824] mb-1 inline-block">
+                  ${blueprint.category.toUpperCase()} • ${blueprint.city}
+                </span>
+                <h2 class="text-white text-lg font-extrabold leading-snug">${blueprint.tagline}</h2>
+              </div>
+            </div>
+          </div>
+        ` : `
+          <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+            <span class="text-[10px] font-extrabold uppercase text-[#10b981] tracking-widest">${page.title}</span>
+            <h2 class="text-lg font-extrabold text-white">${page.subtitle}</h2>
+          </div>
+        `}
+
+        <!-- Render Sections -->
+        ${page.sections.map(sec => `
+          <div class="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-3">
+            <h3 class="font-bold text-base" style="color: ${blueprint.colors.primary}">${sec.title}</h3>
+            <p class="text-xs opacity-80 leading-relaxed">${sec.description}</p>
+
+            ${sec.contentItems && sec.contentItems.length > 0 ? `
+              <div class="space-y-2.5 pt-1">
+                ${sec.contentItems.map(item => `
+                  <div class="p-3 rounded-2xl bg-black/40 border border-white/10 flex justify-between items-center text-xs gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                      ${item.image ? `<img src="${item.image}" alt="${item.title}" class="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/20">` : ''}
+                      <div class="min-w-0">
+                        <span class="font-bold block text-white truncate text-xs">${item.title}</span>
+                        ${item.subtitle ? `<span class="text-[10px] opacity-70 block truncate">${item.subtitle}</span>` : ''}
+                      </div>
+                    </div>
+                    ${item.price ? `<span class="font-extrabold text-xs px-2.5 py-1 rounded-lg bg-white/10 shrink-0" style="color: ${blueprint.colors.primary}">${item.price}</span>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+        `).join('')}
+
+        ${pageIdx === 0 ? `
+          <!-- Chi Siamo / Informazioni -->
+          <div class="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-2">
+            <h3 class="font-bold text-sm" style="color: ${blueprint.colors.primary}">Chi Siamo</h3>
+            <p class="text-xs opacity-80 leading-relaxed">${blueprint.description}</p>
+          </div>
+
+          <!-- Direct Booking Form Widget -->
+          <div class="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-3">
+            <h3 class="font-bold text-sm" style="color: ${blueprint.colors.primary}">📅 Prenotazione Diretta via WhatsApp</h3>
+            <form onsubmit="handleDirectBooking(event)" class="space-y-2.5 text-xs">
+              <input type="text" id="bkName" required placeholder="Il tuo Nome e Cognome" class="w-full bg-black/50 border border-white/20 rounded-xl px-3 py-2.5 text-white placeholder-white/40 focus:outline-none">
+              <div class="grid grid-cols-2 gap-2">
+                <input type="date" id="bkDate" required class="bg-black/50 border border-white/20 rounded-xl px-2.5 py-2 text-white focus:outline-none">
+                <input type="time" id="bkTime" required class="bg-black/50 border border-white/20 rounded-xl px-2.5 py-2 text-white focus:outline-none">
+              </div>
+              <button type="submit" class="w-full py-3.5 rounded-xl font-bold text-xs text-black shadow-lg transition-transform active:scale-95" style="background-color: ${blueprint.colors.primary}">
+                Invia Prenotazione su WhatsApp
+              </button>
+            </form>
+          </div>
+
+          <!-- Contacts Section -->
+          <div class="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-2 text-xs">
+            <h3 class="font-bold text-sm" style="color: ${blueprint.colors.primary}">📍 Orari & Contatti Ufficiali</h3>
+            <p class="opacity-90"><strong>Indirizzo:</strong> ${blueprint.address}</p>
+            <p class="opacity-90"><strong>Telefono:</strong> ${blueprint.phone}</p>
+            <p class="opacity-90"><strong>Orari:</strong> ${blueprint.openingHours}</p>
+          </div>
+        ` : ''}
+
       </div>
     `).join('')}
-
-    <!-- Direct Booking Widget -->
-    <div class="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-3">
-      <h3 class="font-bold text-sm" style="color: ${blueprint.colors.primary}">📅 Prenota un Appuntamento o Tavolo</h3>
-      <form onsubmit="event.preventDefault(); alert('Grazie! La tua richiesta è stata inviata su WhatsApp.'); window.open('https://wa.me/${blueprint.whatsapp}?text=Vorrei%20prenotare%20per%20' + encodeURIComponent(document.getElementById('bkName').value), '_blank');" class="space-y-2 text-xs">
-        <input type="text" id="bkName" required placeholder="Il tuo nome e cognome" class="w-full bg-black/40 border border-white/20 rounded-xl px-3 py-2.5 text-white placeholder-white/40 focus:outline-none">
-        <div class="grid grid-cols-2 gap-2">
-          <input type="date" required class="bg-black/40 border border-white/20 rounded-xl px-2 py-2 text-white focus:outline-none">
-          <input type="time" required class="bg-black/40 border border-white/20 rounded-xl px-2 py-2 text-white focus:outline-none">
-        </div>
-        <button type="submit" class="w-full py-3 rounded-xl font-bold text-xs text-black transition-transform active:scale-95" style="background-color: ${blueprint.colors.primary}">
-          Invia Prenotazione Diretta
-        </button>
-      </form>
-    </div>
-
-    <!-- Contact Info Section -->
-    <div class="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-2 text-xs">
-      <h3 class="font-bold text-sm" style="color: ${blueprint.colors.primary}">📍 Contatti & Orari</h3>
-      <p class="opacity-90"><strong>Indirizzo:</strong> ${blueprint.address}</p>
-      <p class="opacity-90"><strong>Telefono:</strong> ${blueprint.phone}</p>
-      <p class="opacity-90"><strong>Orari di Apertura:</strong> ${blueprint.openingHours}</p>
-    </div>
   </main>
 
-  <!-- WhatsApp Bottom Sticky Bar -->
-  <footer class="fixed bottom-0 left-0 right-0 p-3 bg-black/90 backdrop-blur-md border-t border-white/10 flex justify-center z-50">
-    <a href="https://wa.me/${blueprint.whatsapp}" target="_blank" rel="noopener" class="w-full max-w-md py-3.5 rounded-full text-center font-bold text-xs text-white bg-[#25D366] shadow-xl hover:bg-[#20ba5a] transition-all flex items-center justify-center gap-2">
-      💬 Contatta Subito su WhatsApp (${blueprint.phone})
-    </a>
-  </footer>
+  <!-- Bottom Mobile Navigation Bar -->
+  <nav class="fixed bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-xl border-t border-white/10 p-2.5 flex justify-around items-center max-w-md mx-auto">
+    ${blueprint.pages.map((p, idx) => `
+      <button id="nav-btn-${p.id}" onclick="navigateToPage('${p.id}')" class="nav-tab-btn flex-1 py-2 px-1 rounded-xl text-center flex flex-col items-center gap-0.5 text-[10px] font-bold transition-all ${idx === 0 ? 'nav-active' : 'text-white/70 hover:text-white'}">
+        <span class="truncate max-w-[80px]">${p.title}</span>
+      </button>
+    `).join('')}
+  </nav>
+
+  <!-- Interactive JavaScript Page Switcher -->
+  <script>
+    function navigateToPage(pageId) {
+      document.querySelectorAll('.app-page-view').forEach(el => el.classList.add('hidden'));
+      const activePage = document.getElementById('page-' + pageId);
+      if (activePage) activePage.classList.remove('hidden');
+
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        btn.classList.remove('nav-active', 'bg-[#10b981]', 'text-[#003824]', 'font-extrabold');
+        btn.classList.add('text-white/70');
+      });
+
+      const activeNav = document.getElementById('nav-btn-' + pageId);
+      if (activeNav) {
+        activeNav.classList.add('nav-active');
+        activeNav.classList.remove('text-white/70');
+      }
+
+      const menu = document.getElementById('mobileMenu');
+      if (menu) menu.classList.add('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobileMenu');
+      if (menu) menu.classList.toggle('hidden');
+    }
+
+    function handleDirectBooking(e) {
+      e.preventDefault();
+      const name = document.getElementById('bkName').value;
+      const date = document.getElementById('bkDate').value;
+      const time = document.getElementById('bkTime').value;
+      const msg = encodeURIComponent("Salve, vorrei prenotare per " + name + " in data " + date + " alle ore " + time);
+      window.open("https://wa.me/${blueprint.whatsapp}?text=" + msg, "_blank");
+    }
+  </script>
 </body>
 </html>`;
   };
@@ -191,6 +311,7 @@ export const ExportGuideModal: React.FC<ExportGuideModalProps> = ({
     return `========================================================
 GUIDA PER LA MESSA ONLINE IN AUTONOMIA
 Sito Web: ${blueprint.businessName} (${blueprint.city})
+Pagine incluse: ${blueprint.pages.map(p => p.title).join(', ')}
 ========================================================
 
 Gentile Cliente,
@@ -202,15 +323,15 @@ OPZIONE A: Usa un Dominio Personalizzato (es: www.tuonomedominio.it)
 1. Acquista un dominio su Aruba, Register.it, Namecheap o Hostinger.
 2. Accedi al pannello di controllo (cPanel o Gestione File).
 3. Entra nella cartella "public_html" o "httpdocs".
-4. Carica il file "${blueprint.businessName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_sito.html" e rinominalo in "index.html".
-5. Il tuo sito sarà immediatamente visibile online con protocollo HTTPS sicuro!
+4. Carica il file "index.html" estratto da questo archivio ZIP.
+5. Il tuo sito con menu ad hamburger e tutte le pagine sarà immediatamente visibile online con HTTPS!
 
 --------------------------------------------------------
 OPZIONE B: Hosting Gratuito e Rapido
 --------------------------------------------------------
 Se desideri un link gratuito e immediato senza acquistare un dominio:
 1. Vai su https://tiiny.host oppure https://app.netlify.com/drop
-2. Trascina semplicemente il file ".html" scaricato nella pagina.
+2. Trascina semplicemente il file "index.html" estratto nella pagina.
 3. Ottieni subito il tuo link del tipo: https://${blueprint.businessName.toLowerCase().replace(/[^a-z0-9]/g, '')}.tiiny.site
 
 --------------------------------------------------------
@@ -225,6 +346,40 @@ Per qualsiasi modifica a immagini, menu o numeri WhatsApp, puoi ricontattare la 
       setPaymentLoading(false);
       setIsPaid(true);
     }, 1000);
+  };
+
+  const handleDownloadZip = async () => {
+    const zip = new JSZip();
+    const slug = (blueprint.businessName || 'sito-web')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '_');
+
+    // Interactive multi-page HTML
+    zip.file('index.html', generateStandaloneHtml());
+
+    // Structured JSON data
+    zip.file('blueprint.json', JSON.stringify(blueprint, null, 2));
+
+    // Metadata
+    zip.file('metadata.json', JSON.stringify({
+      name: blueprint.businessName,
+      category: blueprint.category,
+      city: blueprint.city,
+      pagesCount: blueprint.pages.length,
+      updatedAt: new Date().toISOString()
+    }, null, 2));
+
+    // Instructions file
+    zip.file('ISTRUZIONI_PUBBLICAZIONE_SITO.txt', generateInstructionsTxt());
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${slug}_pacchetto_web_app_completo.zip`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleDownloadHtml = () => {
@@ -518,34 +673,54 @@ Per qualsiasi modifica a immagini, menu o numeri WhatsApp, puoi ricontattare la 
               )}
 
               {/* Download Actions */}
-              <div className="p-3.5 rounded-2xl bg-[#0e0e0d] border border-[#3c4a42]/40 space-y-2">
+              <div className="p-3.5 rounded-2xl bg-[#10b981]/10 border border-[#10b981]/40 space-y-2.5">
                 <div className="flex items-center gap-2 text-[#10b981] font-bold">
-                  <FileCode className="w-4 h-4" />
-                  <span>1. File Sito Web Standalone (index.html)</span>
+                  <FolderArchive className="w-5 h-5" />
+                  <span>1. Pacchetto Completo Web App (.zip) - CONSIGLIATO</span>
                 </div>
                 <p className="text-[#bbcabf] text-[11px] leading-relaxed">
-                  File autonomo con Tailwind CSS, form di prenotazione attiva, WhatsApp diretto e immagini ottimizzate per smartphone.
+                  Scarica l'archivio ZIP contenente il file <strong>index.html</strong> completo con menu ad hamburger e tutte le pagine, la configurazione <strong>blueprint.json</strong>, il file <strong>metadata.json</strong> e la guida in <strong>.txt</strong> per Aruba/Hostinger.
                 </p>
                 <button
-                  onClick={handleDownloadHtml}
-                  className="w-full py-2.5 bg-[#10b981] hover:bg-[#059669] text-[#003824] font-bold rounded-xl flex items-center justify-center gap-2 transition-transform active:scale-95"
+                  onClick={handleDownloadZip}
+                  className="w-full py-3 bg-[#10b981] hover:bg-[#059669] text-[#003824] font-extrabold rounded-xl flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-md text-xs"
                 >
                   <Download className="w-4 h-4" />
-                  <span>Scarica index.html</span>
+                  <span>Scarica Pacchetto Completo ZIP (.zip)</span>
                 </button>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-[#0e0e0d] border border-[#3c4a42]/40 space-y-2">
                 <div className="flex items-center gap-2 text-[#35dec1] font-bold">
-                  <Globe className="w-4 h-4" />
-                  <span>2. Guida di Istruzioni Hosting Personale (.txt)</span>
+                  <FileCode className="w-4 h-4" />
+                  <span>2. Singolo File Web App (index.html)</span>
                 </div>
+                <p className="text-[#bbcabf] text-[11px] leading-relaxed">
+                  Scarica unicamente il file <code>index.html</code> autonomo e pronto con navigazione ad hamburger, menu interattivo e form WhatsApp.
+                </p>
                 <button
-                  onClick={handleDownloadTxtInstructions}
+                  onClick={handleDownloadHtml}
                   className="w-full py-2.5 bg-[#2a2a28] hover:bg-[#3c4a42] text-[#e5e2df] font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
                 >
                   <Download className="w-4 h-4 text-[#35dec1]" />
-                  <span>Scarica ISTRUZIONI_PUBBLICAZIONE.txt</span>
+                  <span>Scarica Solo index.html</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={handleDownloadJson}
+                  className="py-2.5 bg-[#0e0e0d] border border-[#3c4a42]/40 hover:bg-[#2a2a28] text-[#bbcabf] font-bold rounded-xl flex items-center justify-center gap-1.5 text-[11px]"
+                >
+                  <Code className="w-3.5 h-3.5 text-[#10b981]" />
+                  <span>Blueprint JSON</span>
+                </button>
+                <button
+                  onClick={handleDownloadTxtInstructions}
+                  className="py-2.5 bg-[#0e0e0d] border border-[#3c4a42]/40 hover:bg-[#2a2a28] text-[#bbcabf] font-bold rounded-xl flex items-center justify-center gap-1.5 text-[11px]"
+                >
+                  <FileText className="w-3.5 h-3.5 text-[#35dec1]" />
+                  <span>Istruzioni TXT</span>
                 </button>
               </div>
             </div>

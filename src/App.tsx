@@ -320,6 +320,8 @@ export default function App() {
           onUpdateBlueprint={updateBlueprintWithHistory}
           onClose={() => setIsModelingStudioOpen(false)}
           onOpenFullscreen={() => setIsFullscreenOpen(true)}
+          onSave={handleSaveBlueprint}
+          lastSavedTime={lastSavedTime}
         />
       )}
 

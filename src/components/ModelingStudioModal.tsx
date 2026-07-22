@@ -23,6 +23,7 @@ import {
   MapPin,
   ExternalLink
 } from 'lucide-react';
+import { SaveReminderBar } from './SaveReminderBar';
 import { WebsiteBlueprint, SitePage } from '../types';
 
 interface ModelingStudioModalProps {
@@ -30,6 +31,8 @@ interface ModelingStudioModalProps {
   onUpdateBlueprint: (updated: WebsiteBlueprint) => void;
   onClose: () => void;
   onOpenFullscreen: () => void;
+  onSave?: () => void;
+  lastSavedTime?: string | null;
 }
 
 export const ModelingStudioModal: React.FC<ModelingStudioModalProps> = ({
@@ -37,6 +40,8 @@ export const ModelingStudioModal: React.FC<ModelingStudioModalProps> = ({
   onUpdateBlueprint,
   onClose,
   onOpenFullscreen,
+  onSave,
+  lastSavedTime,
 }) => {
   const [activeTab, setActiveTab] = useState<'content' | 'design' | 'widgets' | 'domain'>('content');
   const [selectedPageId, setSelectedPageId] = useState<string>('home');
@@ -147,6 +152,11 @@ export const ModelingStudioModal: React.FC<ModelingStudioModalProps> = ({
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Save Reminder Bar for Studio Step */}
+        {onSave && (
+          <SaveReminderBar onSave={onSave} lastSavedTime={lastSavedTime} />
+        )}
 
         {/* Tab Navigation */}
         <div className="flex bg-[#0e0e0d] p-1 rounded-2xl border border-[#3c4a42]/40 text-xs font-semibold overflow-x-auto no-scrollbar">
