@@ -16,7 +16,10 @@ import {
   Settings,
   FolderArchive,
   Layers,
-  ChevronRight
+  ChevronRight,
+  Undo2,
+  Save,
+  Check
 } from 'lucide-react';
 
 interface TopAppBarProps {
@@ -26,6 +29,13 @@ interface TopAppBarProps {
   onOpenModelingStudio?: () => void;
   onOpenSubscriptionPlans?: () => void;
   onOpenSeoModal?: () => void;
+  onOpenProDashboard?: () => void;
+  isProUnlocked?: boolean;
+  canUndo?: boolean;
+  undoCount?: number;
+  onUndo?: () => void;
+  onSave?: () => void;
+  lastSavedTime?: string | null;
   darkMode: boolean;
   onToggleDarkMode: () => void;
 }
@@ -37,11 +47,27 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   onOpenModelingStudio,
   onOpenSubscriptionPlans,
   onOpenSeoModal,
+  onOpenProDashboard,
+  isProUnlocked = false,
+  canUndo = false,
+  undoCount = 0,
+  onUndo,
+  onSave,
+  lastSavedTime,
   darkMode,
   onToggleDarkMode,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const handleSaveClick = () => {
+    if (onSave) {
+      onSave();
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 2000);
+    }
+  };
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -70,15 +96,57 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
 
         {/* Right Desktop Quick Actions & Hamburger Trigger */}
         <div className="flex items-center gap-1.5" ref={menuRef}>
-          {/* Quick Piani Pro Button (Desktop) */}
-          {onOpenSubscriptionPlans && (
+          
+          {/* Quick Undo Button */}
+          {onUndo && (
             <button
-              onClick={onOpenSubscriptionPlans}
-              className="hidden sm:flex bg-[#10b981] hover:bg-[#059669] text-[#003824] px-2.5 py-1 rounded-full text-xs font-black items-center gap-1 transition-all active:scale-95 shadow-md"
-              title="Piani & Abbonamenti Pro"
+              onClick={onUndo}
+              disabled={!canUndo}
+              className={`p-2 rounded-full border transition-all flex items-center justify-center relative ${
+                canUndo
+                  ? 'bg-[#1c1c1a] text-[#35dec1] hover:bg-[#35dec1]/20 border-[#35dec1]/50 active:scale-90 shadow'
+                  : 'bg-[#1c1c1a]/50 text-gray-600 border-gray-800 cursor-not-allowed opacity-50'
+              }`}
+              title={canUndo ? `Annulla ultima modifica AI (${undoCount}/3 disponibili)` : 'Nessuna modifica da annullare'}
             >
-              <Crown className="w-3.5 h-3.5 fill-current" />
-              <span>Piani Pro</span>
+              <Undo2 className="w-4 h-4" />
+              {canUndo && undoCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#35dec1] text-[#003824] text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow">
+                  {undoCount}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Quick Save Button */}
+          {onSave && (
+            <button
+              onClick={handleSaveClick}
+              className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all border shadow active:scale-95 ${
+                justSaved
+                  ? 'bg-emerald-500 text-black border-emerald-400'
+                  : 'bg-[#10b981]/15 text-[#10b981] hover:bg-[#10b981]/25 border-[#10b981]/40'
+              }`}
+              title="Salva modifiche localmente nel browser"
+            >
+              {justSaved ? <Check className="w-3.5 h-3.5 font-bold" /> : <Save className="w-3.5 h-3.5" />}
+              <span className="hidden xs:inline">{justSaved ? 'Salvato!' : 'Salva'}</span>
+            </button>
+          )}
+
+          {/* Quick Dashboard Pro Button (When Pro unlocked or available) */}
+          {onOpenProDashboard && (
+            <button
+              onClick={onOpenProDashboard}
+              className={`hidden sm:flex px-2.5 py-1 rounded-full text-xs font-black items-center gap-1 transition-all active:scale-95 shadow-md ${
+                isProUnlocked
+                  ? 'bg-[#6700c9] hover:bg-[#5200a3] text-white border border-[#cfacff]/40 shadow-[#6700c9]/30'
+                  : 'bg-[#10b981] hover:bg-[#059669] text-[#003824]'
+              }`}
+              title={isProUnlocked ? 'Apri Dashboard Pro Studio' : 'Piani & Abbonamenti Pro'}
+            >
+              <Crown className="w-3.5 h-3.5 fill-current text-amber-300" />
+              <span>{isProUnlocked ? 'Dashboard Pro' : 'Piani Pro'}</span>
             </button>
           )}
 
@@ -140,6 +208,90 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
                   v2.5
                 </span>
               </div>
+
+              {/* Menu Item: Salva Modifiche */}
+              {onSave && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    handleSaveClick();
+                  }}
+                  className="w-full p-2.5 rounded-xl hover:bg-[#10b981]/15 text-[#e5e2df] hover:text-[#10b981] font-semibold flex items-center justify-between transition-colors group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-[#10b981]/20 text-[#10b981] flex items-center justify-center shrink-0">
+                      <Save className="w-4 h-4" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block font-bold">Salva Progetto</span>
+                      <span className="text-[10px] text-[#bbcabf] font-normal">
+                        {lastSavedTime ? `Ultimo salvataggio: ${lastSavedTime}` : 'Salva stato nel browser'}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#bbcabf] group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
+
+              {/* Menu Item: Annulla Modifica AI */}
+              {onUndo && (
+                <button
+                  onClick={() => {
+                    if (canUndo) {
+                      setIsMenuOpen(false);
+                      onUndo();
+                    }
+                  }}
+                  disabled={!canUndo}
+                  className={`w-full p-2.5 rounded-xl font-semibold flex items-center justify-between transition-colors group ${
+                    canUndo
+                      ? 'hover:bg-[#35dec1]/15 text-[#e5e2df] hover:text-[#35dec1]'
+                      : 'opacity-40 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-[#35dec1]/20 text-[#35dec1] flex items-center justify-center shrink-0">
+                      <Undo2 className="w-4 h-4" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block font-bold">Annulla Modifica ({undoCount}/3)</span>
+                      <span className="text-[10px] text-[#bbcabf] font-normal">Ripristina versione precedente</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#bbcabf] group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
+              {onOpenProDashboard && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onOpenProDashboard();
+                  }}
+                  className={`w-full p-2.5 rounded-xl font-semibold flex items-center justify-between transition-colors group ${
+                    isProUnlocked
+                      ? 'bg-[#6700c9]/25 hover:bg-[#6700c9]/40 text-white border border-[#6700c9]/50'
+                      : 'hover:bg-[#10b981]/15 text-[#e5e2df] hover:text-[#10b981]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-[#6700c9]/40 text-[#cfacff] flex items-center justify-center shrink-0">
+                      <Crown className="w-4 h-4 fill-current text-amber-300" />
+                    </div>
+                    <div className="text-left">
+                      <div className="flex items-center gap-1.5">
+                        <span className="block font-bold">Dashboard Pro Studio</span>
+                        {isProUnlocked && (
+                          <span className="text-[8px] bg-emerald-500/20 text-emerald-400 font-extrabold px-1.5 py-0.2 rounded">
+                            UNLOCKED
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-[#bbcabf] font-normal">Analytics, App e Fatturazione</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#bbcabf] group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
 
               {/* Menu Item 1: Piani Pro */}
               {onOpenSubscriptionPlans && (

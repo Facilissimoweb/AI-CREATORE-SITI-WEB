@@ -11,6 +11,7 @@ import { ChatAssistantModal } from './components/ChatAssistantModal';
 import { ModelingStudioModal } from './components/ModelingStudioModal';
 import { SubscriptionPlans } from './components/SubscriptionPlans';
 import { SeoMetaModal } from './components/SeoMetaModal';
+import { ProDashboard } from './components/ProDashboard';
 import { WebsiteBlueprint, BusinessCategory, GoalOption } from './types';
 import { DEFAULT_PIZZERIA, DEFAULT_CONSULTANT, DEFAULT_ARTISAN } from './data/defaultTemplates';
 
@@ -18,6 +19,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('idea');
   const [darkMode, setDarkMode] = useState(true);
   const [blueprint, setBlueprint] = useState<WebsiteBlueprint>(DEFAULT_PIZZERIA);
+  const [historyStack, setHistoryStack] = useState<WebsiteBlueprint[]>([]);
+  const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProcessingChat, setIsProcessingChat] = useState(false);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
@@ -27,6 +30,7 @@ export default function App() {
   const [isModelingStudioOpen, setIsModelingStudioOpen] = useState(false);
   const [isSubscriptionPlansOpen, setIsSubscriptionPlansOpen] = useState(false);
   const [isSeoModalOpen, setIsSeoModalOpen] = useState(false);
+  const [isProDashboardOpen, setIsProDashboardOpen] = useState(false);
   const [isProUnlocked, setIsProUnlocked] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -39,9 +43,60 @@ export default function App() {
     }
   }, [darkMode]);
 
+  // Load saved blueprint from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedBlueprint = localStorage.getItem('facilissimoweb_blueprint');
+      const savedTime = localStorage.getItem('facilissimoweb_saved_time');
+      if (savedBlueprint) {
+        const parsed = JSON.parse(savedBlueprint);
+        if (parsed && parsed.businessName) {
+          setBlueprint(parsed);
+          if (savedTime) setLastSavedTime(savedTime);
+        }
+      }
+    } catch (e) {
+      console.warn("Could not load saved blueprint:", e);
+    }
+  }, []);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // Helper to update blueprint while preserving up to 3 undo steps
+  const updateBlueprintWithHistory = (newBp: WebsiteBlueprint) => {
+    setHistoryStack((prev) => {
+      // Keep max 3 items in history stack
+      const updated = [...prev, blueprint];
+      return updated.slice(-3);
+    });
+    setBlueprint(newBp);
+  };
+
+  // Undo last change (up to 3 steps)
+  const handleUndo = () => {
+    if (historyStack.length === 0) return;
+    const previous = historyStack[historyStack.length - 1];
+    setHistoryStack((prev) => prev.slice(0, prev.length - 1));
+    setBlueprint(previous);
+    showToast("↩️ Modifica annullata! Ripristinata la versione precedente.");
+  };
+
+  // Explicitly save current state to localStorage
+  const handleSaveBlueprint = () => {
+    try {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      localStorage.setItem('facilissimoweb_blueprint', JSON.stringify(blueprint));
+      localStorage.setItem('facilissimoweb_saved_time', timeStr);
+      setLastSavedTime(timeStr);
+      showToast(`💾 Progetto salvato localmente alle ${timeStr}!`);
+    } catch (e) {
+      console.error("Errore salvataggio:", e);
+      showToast("❌ Impossibile salvare in locale.");
+    }
   };
 
   // Handle generating new blueprint via Gemini API
@@ -71,20 +126,24 @@ export default function App() {
 
       const data = await response.json();
       if (data.success && data.blueprint) {
-        setBlueprint(data.blueprint);
+        updateBlueprintWithHistory(data.blueprint);
         showToast("✨ Web App generata con successo dall'AI!");
       } else {
         // Fallback gracefully to category defaults if offline or API delay
-        if (category === 'consulente') setBlueprint({ ...DEFAULT_CONSULTANT, city });
-        else if (category === 'artigiano') setBlueprint({ ...DEFAULT_ARTISAN, city });
-        else setBlueprint({ ...DEFAULT_PIZZERIA, city });
+        let fallbackBp = { ...DEFAULT_PIZZERIA, city };
+        if (category === 'consulente') fallbackBp = { ...DEFAULT_CONSULTANT, city };
+        else if (category === 'artigiano') fallbackBp = { ...DEFAULT_ARTISAN, city };
+        
+        updateBlueprintWithHistory(fallbackBp);
         showToast("✨ Web App personalizzata pronta!");
       }
     } catch (err) {
       console.warn("Using template fallback for generation:", err);
-      if (category === 'consulente') setBlueprint({ ...DEFAULT_CONSULTANT, city });
-      else if (category === 'artigiano') setBlueprint({ ...DEFAULT_ARTISAN, city });
-      else setBlueprint({ ...DEFAULT_PIZZERIA, city });
+      let fallbackBp = { ...DEFAULT_PIZZERIA, city };
+      if (category === 'consulente') fallbackBp = { ...DEFAULT_CONSULTANT, city };
+      else if (category === 'artigiano') fallbackBp = { ...DEFAULT_ARTISAN, city };
+
+      updateBlueprintWithHistory(fallbackBp);
       showToast("✨ Web App personalizzata pronta!");
     } finally {
       setIsGenerating(false);
@@ -111,7 +170,7 @@ export default function App() {
       const resData = await response.json();
       if (resData.success && resData.data) {
         if (resData.data.updatedBlueprint) {
-          setBlueprint(resData.data.updatedBlueprint);
+          updateBlueprintWithHistory(resData.data.updatedBlueprint);
         }
         showToast(`🤖 ${resData.data.replyText || 'Web App aggiornata dall\'AI!'}`);
       } else {
@@ -139,6 +198,13 @@ export default function App() {
         onOpenModelingStudio={() => setIsModelingStudioOpen(true)}
         onOpenSubscriptionPlans={() => setIsSubscriptionPlansOpen(true)}
         onOpenSeoModal={() => setIsSeoModalOpen(true)}
+        onOpenProDashboard={() => setIsProDashboardOpen(true)}
+        isProUnlocked={isProUnlocked}
+        canUndo={historyStack.length > 0}
+        undoCount={historyStack.length}
+        onUndo={handleUndo}
+        onSave={handleSaveBlueprint}
+        lastSavedTime={lastSavedTime}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
       />
@@ -157,7 +223,7 @@ export default function App() {
         {activeTab === 'stile' && (
           <StyleTab
             blueprint={blueprint}
-            onUpdateBlueprint={setBlueprint}
+            onUpdateBlueprint={updateBlueprintWithHistory}
             onSendStyleChat={handleSendStyleChat}
             isProcessingChat={isProcessingChat}
             onNextStep={() => setActiveTab('sito')}
@@ -168,12 +234,14 @@ export default function App() {
         {activeTab === 'sito' && (
           <BlueprintTab
             blueprint={blueprint}
-            onUpdateBlueprint={setBlueprint}
+            onUpdateBlueprint={updateBlueprintWithHistory}
             onOpenDesignerModal={() => setIsDesignerModalOpen(true)}
             onOpenFullscreen={() => setIsFullscreenOpen(true)}
             onOpenChatModal={() => setIsChatModalOpen(true)}
             onOpenModelingStudio={() => setIsModelingStudioOpen(true)}
             onOpenSeoModal={() => setIsSeoModalOpen(true)}
+            onOpenProDashboard={() => setIsProDashboardOpen(true)}
+            isProUnlocked={isProUnlocked}
           />
         )}
 
@@ -216,7 +284,7 @@ export default function App() {
       {isChatModalOpen && (
         <ChatAssistantModal
           blueprint={blueprint}
-          onUpdateBlueprint={setBlueprint}
+          onUpdateBlueprint={updateBlueprintWithHistory}
           onSendStyleChat={handleSendStyleChat}
           isProcessingChat={isProcessingChat}
           onClose={() => setIsChatModalOpen(false)}
@@ -228,7 +296,7 @@ export default function App() {
       {isModelingStudioOpen && (
         <ModelingStudioModal
           blueprint={blueprint}
-          onUpdateBlueprint={setBlueprint}
+          onUpdateBlueprint={updateBlueprintWithHistory}
           onClose={() => setIsModelingStudioOpen(false)}
           onOpenFullscreen={() => setIsFullscreenOpen(true)}
         />
@@ -268,6 +336,7 @@ export default function App() {
             setIsProUnlocked(true);
             showToast(`🎉 Piano ${planName} attivato con successo! Funzionalità sbloccate.`);
           }}
+          onOpenProDashboard={() => setIsProDashboardOpen(true)}
           onClose={() => setIsSubscriptionPlansOpen(false)}
         />
       )}
@@ -277,10 +346,23 @@ export default function App() {
         <SeoMetaModal
           blueprint={blueprint}
           onUpdateBlueprint={(updated) => {
-            setBlueprint(updated);
+            updateBlueprintWithHistory(updated);
             showToast("Impostazioni SEO & OpenGraph aggiornate!");
           }}
           onClose={() => setIsSeoModalOpen(false)}
+        />
+      )}
+
+      {/* Pro Dashboard Central Hub Modal */}
+      {isProDashboardOpen && (
+        <ProDashboard
+          blueprint={blueprint}
+          isProUnlocked={isProUnlocked}
+          onClose={() => setIsProDashboardOpen(false)}
+          onOpenSubscriptionPlans={() => setIsSubscriptionPlansOpen(true)}
+          onOpenSeoModal={() => setIsSeoModalOpen(true)}
+          onOpenFullscreen={() => setIsFullscreenOpen(true)}
+          onOpenExportGuide={() => setIsExportGuideOpen(true)}
         />
       )}
     </div>

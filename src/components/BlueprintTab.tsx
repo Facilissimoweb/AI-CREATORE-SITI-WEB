@@ -37,6 +37,8 @@ interface BlueprintTabProps {
   onOpenChatModal?: () => void;
   onOpenModelingStudio?: () => void;
   onOpenSeoModal?: () => void;
+  onOpenProDashboard?: () => void;
+  isProUnlocked?: boolean;
 }
 
 export const BlueprintTab: React.FC<BlueprintTabProps> = ({
@@ -47,6 +49,8 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
   onOpenChatModal,
   onOpenModelingStudio,
   onOpenSeoModal,
+  onOpenProDashboard,
+  isProUnlocked = false,
 }) => {
   const [openPageId, setOpenPageId] = useState<string>('home');
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);

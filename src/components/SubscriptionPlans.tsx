@@ -25,6 +25,7 @@ interface SubscriptionPlansProps {
   blueprint: WebsiteBlueprint;
   onClose?: () => void;
   onPlanUnlocked?: (planName: string) => void;
+  onOpenProDashboard?: () => void;
   isUnlocked?: boolean;
 }
 
@@ -32,6 +33,7 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
   blueprint,
   onClose,
   onPlanUnlocked,
+  onOpenProDashboard,
   isUnlocked = false
 }) => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
@@ -403,14 +405,29 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
               </div>
             </div>
 
-            <button
-              onClick={() => {
-                if (onClose) onClose();
-              }}
-              className="w-full py-3.5 bg-[#10b981] text-[#003824] font-extrabold text-xs rounded-xl shadow-lg hover:bg-[#059669] transition-transform active:scale-95"
-            >
-              Vai alla tua Web App sbloccata
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              {onOpenProDashboard && (
+                <button
+                  onClick={() => {
+                    if (onClose) onClose();
+                    onOpenProDashboard();
+                  }}
+                  className="w-full py-3.5 bg-[#6700c9] text-white font-extrabold text-xs rounded-xl shadow-lg hover:bg-[#5200a3] transition-transform active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  <Crown className="w-4 h-4 fill-current text-amber-300" />
+                  <span>Apri Dashboard Pro Studio</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => {
+                  if (onClose) onClose();
+                }}
+                className="w-full py-3.5 bg-[#10b981] text-[#003824] font-extrabold text-xs rounded-xl shadow-lg hover:bg-[#059669] transition-transform active:scale-95"
+              >
+                Vai alla tua Web App sbloccata
+              </button>
+            </div>
           </div>
         )}
 
