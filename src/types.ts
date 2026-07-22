@@ -40,6 +40,7 @@ export interface SitePage {
   slug: string;
   icon: string;
   subtitle: string;
+  heroImage?: string;
   sections: PageSection[];
 }
 

@@ -19,7 +19,9 @@ import {
   Save,
   Check,
   HelpCircle,
-  Key
+  Share2,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 interface TopAppBarProps {
@@ -31,13 +33,15 @@ interface TopAppBarProps {
   onOpenSeoModal?: () => void;
   onOpenProDashboard?: () => void;
   onOpenTour?: () => void;
-  onOpenTokenHelp?: () => void;
+  onOpenSocialShare?: () => void;
   isProUnlocked?: boolean;
   canUndo?: boolean;
   undoCount?: number;
   onUndo?: () => void;
   onSave?: () => void;
   lastSavedTime?: string | null;
+  darkMode?: boolean;
+  onToggleDarkMode?: () => void;
 }
 
 export const TopAppBar: React.FC<TopAppBarProps> = ({
@@ -49,13 +53,15 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   onOpenSeoModal,
   onOpenProDashboard,
   onOpenTour,
-  onOpenTokenHelp,
+  onOpenSocialShare,
   isProUnlocked = false,
   canUndo = false,
   undoCount = 0,
   onUndo,
   onSave,
   lastSavedTime,
+  darkMode = true,
+  onToggleDarkMode,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
@@ -94,7 +100,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
           </h1>
         </div>
 
-        {/* Right Quick Actions & Hamburger Trigger */}
+        {/* Right Desktop Quick Actions & Hamburger Trigger */}
         <div className="flex items-center gap-1.5" ref={menuRef}>
           
           {/* Quick Undo Button */}
@@ -122,26 +128,43 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
           {onSave && (
             <button
               onClick={handleSaveClick}
-              className={`px-3 py-1.5 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition-all border shadow active:scale-95 ${
+              className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all border shadow active:scale-95 ${
                 justSaved
                   ? 'bg-emerald-500 text-black border-emerald-400'
-                  : 'bg-[#10b981] hover:bg-[#059669] text-[#003824] border-[#10b981]'
+                  : 'bg-[#10b981]/15 text-[#10b981] hover:bg-[#10b981]/25 border-[#10b981]/40'
               }`}
               title="Salva modifiche localmente nel browser"
             >
-              {justSaved ? <Check className="w-4 h-4 font-bold" /> : <Save className="w-4 h-4" />}
-              <span>{justSaved ? 'Salvato!' : 'Salva Modifiche'}</span>
+              {justSaved ? <Check className="w-3.5 h-3.5 font-bold" /> : <Save className="w-3.5 h-3.5" />}
+              <span className="hidden xs:inline">{justSaved ? 'Salvato!' : 'Salva'}</span>
             </button>
           )}
 
-          {/* Token Help Quick Button */}
-          {onOpenTokenHelp && (
+          {/* Quick Dashboard Pro Button (When Pro unlocked or available) */}
+          {onOpenProDashboard && (
             <button
-              onClick={onOpenTokenHelp}
-              className="p-2 rounded-full bg-[#6700c9]/20 text-[#cfacff] hover:bg-[#6700c9]/40 transition-colors border border-[#6700c9]/50"
-              title="Spiegazione Token Vercel & Chiavi AI"
+              onClick={onOpenProDashboard}
+              className={`hidden sm:flex px-2.5 py-1 rounded-full text-xs font-black items-center gap-1 transition-all active:scale-95 shadow-md ${
+                isProUnlocked
+                  ? 'bg-[#6700c9] hover:bg-[#5200a3] text-white border border-[#cfacff]/40 shadow-[#6700c9]/30'
+                  : 'bg-[#10b981] hover:bg-[#059669] text-[#003824]'
+              }`}
+              title={isProUnlocked ? 'Apri Dashboard Pro Studio' : 'Piani & Abbonamenti Pro'}
             >
-              <Key className="w-4 h-4 text-[#35dec1]" />
+              <Crown className="w-3.5 h-3.5 fill-current text-amber-300" />
+              <span>{isProUnlocked ? 'Dashboard Pro' : 'Piani Pro'}</span>
+            </button>
+          )}
+
+          {/* Quick SEO Button */}
+          {onOpenSeoModal && (
+            <button
+              onClick={onOpenSeoModal}
+              className="hidden sm:flex bg-[#0e0e0d] border border-[#3c4a42] text-[#35dec1] hover:text-white px-2.5 py-1 rounded-full text-xs font-bold items-center gap-1 transition-all active:scale-95 shadow"
+              title="Impostazioni SEO & OpenGraph"
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span>SEO</span>
             </button>
           )}
 
@@ -154,6 +177,28 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
             <Smartphone className="w-3.5 h-3.5 text-[#10b981]" />
             <span>App Live</span>
           </button>
+
+          {/* Social Share Button */}
+          {onOpenSocialShare && (
+            <button
+              onClick={onOpenSocialShare}
+              className="p-2 rounded-full bg-[#10b981]/20 text-[#10b981] hover:bg-[#10b981]/30 transition-colors border border-[#10b981]/40 flex items-center justify-center active:scale-95 shadow"
+              title="Condividi Web App sui Social (WhatsApp, FB, QR)"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* Theme Toggle Button */}
+          {onToggleDarkMode && (
+            <button
+              onClick={onToggleDarkMode}
+              className="p-2 rounded-full bg-[#1c1c1a] text-[#bbcabf] hover:text-[#e5e2df] transition-colors border border-[#3c4a42]/30 flex items-center justify-center active:scale-95 shadow"
+              title={darkMode ? "Passa a Tema Chiaro" : "Passa a Tema Scuro"}
+            >
+              {darkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-indigo-300" />}
+            </button>
+          )}
 
           {/* Hamburger Menu Toggle Button */}
           <button
@@ -183,22 +228,22 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
                 </span>
               </div>
 
-              {/* Menu Item: Spiegazione Token Vercel & AI */}
-              {onOpenTokenHelp && (
+              {/* Menu Item: Condividi sui Social */}
+              {onOpenSocialShare && (
                 <button
                   onClick={() => {
                     setIsMenuOpen(false);
-                    onOpenTokenHelp();
+                    onOpenSocialShare();
                   }}
-                  className="w-full p-2.5 rounded-xl hover:bg-[#6700c9]/20 text-[#e5e2df] hover:text-[#cfacff] font-semibold flex items-center justify-between transition-colors group"
+                  className="w-full p-2.5 rounded-xl hover:bg-[#10b981]/15 text-[#e5e2df] hover:text-[#10b981] font-semibold flex items-center justify-between transition-colors group"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-[#6700c9]/30 text-[#35dec1] flex items-center justify-center shrink-0">
-                      <Key className="w-4 h-4" />
+                    <div className="w-7 h-7 rounded-lg bg-[#10b981]/20 text-[#10b981] flex items-center justify-center shrink-0">
+                      <Share2 className="w-4 h-4" />
                     </div>
                     <div className="text-left">
-                      <span className="block font-bold text-white">Token Vercel & Chiave AI</span>
-                      <span className="text-[10px] text-[#35dec1] font-normal">Spiegazione token & inserimento</span>
+                      <span className="block font-bold">Condividi sui Social</span>
+                      <span className="text-[10px] text-[#bbcabf] font-normal">WhatsApp, Facebook, QR Code</span>
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-[#bbcabf] group-hover:translate-x-0.5 transition-transform" />
@@ -279,8 +324,39 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
                   <ChevronRight className="w-4 h-4 text-[#bbcabf] group-hover:translate-x-0.5 transition-transform" />
                 </button>
               )}
+              {onOpenProDashboard && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onOpenProDashboard();
+                  }}
+                  className={`w-full p-2.5 rounded-xl font-semibold flex items-center justify-between transition-colors group ${
+                    isProUnlocked
+                      ? 'bg-[#6700c9]/25 hover:bg-[#6700c9]/40 text-white border border-[#6700c9]/50'
+                      : 'hover:bg-[#10b981]/15 text-[#e5e2df] hover:text-[#10b981]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-[#6700c9]/40 text-[#cfacff] flex items-center justify-center shrink-0">
+                      <Crown className="w-4 h-4 fill-current text-amber-300" />
+                    </div>
+                    <div className="text-left">
+                      <div className="flex items-center gap-1.5">
+                        <span className="block font-bold">Dashboard Pro Studio</span>
+                        {isProUnlocked && (
+                          <span className="text-[8px] bg-emerald-500/20 text-emerald-400 font-extrabold px-1.5 py-0.2 rounded">
+                            UNLOCKED
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-[#bbcabf] font-normal">Analytics, App e Fatturazione</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#bbcabf] group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
 
-              {/* Menu Item: Piani Pro */}
+              {/* Menu Item 1: Piani Pro */}
               {onOpenSubscriptionPlans && (
                 <button
                   onClick={() => {
@@ -302,7 +378,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
                 </button>
               )}
 
-              {/* Menu Item: SEO Settings */}
+              {/* Menu Item 2: SEO Settings */}
               {onOpenSeoModal && (
                 <button
                   onClick={() => {
@@ -324,7 +400,51 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
                 </button>
               )}
 
-              {/* Menu Item: Anteprima App Live */}
+              {/* Menu Item 3: Copilota Chat */}
+              {onOpenChatModal && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onOpenChatModal();
+                  }}
+                  className="w-full p-2.5 rounded-xl hover:bg-[#6700c9]/20 text-[#e5e2df] hover:text-[#cfacff] font-semibold flex items-center justify-between transition-colors group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-[#6700c9]/30 text-[#cfacff] flex items-center justify-center shrink-0">
+                      <Bot className="w-4 h-4" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block font-bold">Copilota AI Chat</span>
+                      <span className="text-[10px] text-[#bbcabf] font-normal">Modifica sito con assistente</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#bbcabf] group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
+
+              {/* Menu Item 4: Plancia Modellazione */}
+              {onOpenModelingStudio && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onOpenModelingStudio();
+                  }}
+                  className="w-full p-2.5 rounded-xl hover:bg-[#10b981]/15 text-[#e5e2df] hover:text-[#10b981] font-semibold flex items-center justify-between transition-colors group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-[#10b981]/20 text-[#10b981] flex items-center justify-center shrink-0">
+                      <Sliders className="w-4 h-4" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block font-bold">Studio Modellazione</span>
+                      <span className="text-[10px] text-[#bbcabf] font-normal">Personalizza layout & dati</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#bbcabf] group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
+
+              {/* Menu Item 5: Anteprima App Live */}
               <button
                 onClick={() => {
                   setIsMenuOpen(false);
@@ -342,9 +462,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-[#bbcabf] group-hover:translate-x-0.5 transition-transform" />
-              </button>
-
-              {/* Menu Item: Pubblica & Messa Online */}
+              </button>              {/* Menu Item 6: Pubblica & Messa Online */}
               <button
                 onClick={() => {
                   setIsMenuOpen(false);
@@ -364,6 +482,27 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
                 <ChevronRight className="w-4 h-4 text-[#bbcabf] group-hover:translate-x-0.5 transition-transform" />
               </button>
 
+              {/* Menu Item 7: Switch Tema Chiaro / Scuro */}
+              {onToggleDarkMode && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onToggleDarkMode();
+                  }}
+                  className="w-full p-2.5 rounded-xl hover:bg-white/10 text-[#e5e2df] font-semibold flex items-center justify-between transition-colors group border-t border-[#3c4a42]/40 pt-2"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0">
+                      {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                    </div>
+                    <div className="text-left">
+                      <span className="block font-bold">Cambia Tema ({darkMode ? 'Scuro' : 'Chiaro'})</span>
+                      <span className="text-[10px] text-[#bbcabf] font-normal">Passa a modalità {darkMode ? 'Chiara' : 'Scura'}</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#bbcabf] group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -28,9 +28,7 @@ import {
   Settings,
   RefreshCw,
   Eye,
-  SlidersHorizontal,
-  Share2,
-  Copy
+  SlidersHorizontal
 } from 'lucide-react';
 import { WebsiteBlueprint } from '../types';
 
@@ -105,14 +103,6 @@ export const FullscreenPreview: React.FC<FullscreenPreviewProps> = ({
   const [bookingTime, setBookingTime] = useState('20:00');
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [isAppMenuOpen, setIsAppMenuOpen] = useState(false);
-  const [copiedShareLink, setCopiedShareLink] = useState(false);
-
-  const handleCopyShareLink = () => {
-    const link = window.location.href;
-    navigator.clipboard.writeText(link);
-    setCopiedShareLink(true);
-    setTimeout(() => setCopiedShareLink(false), 3000);
-  };
 
   const currentPage =
     blueprint.pages.find((p) => p.slug === activePageSlug) || blueprint.pages[0];
@@ -560,33 +550,53 @@ export const FullscreenPreview: React.FC<FullscreenPreviewProps> = ({
 
               {/* Main Client Site Body */}
               <div
-                className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-5"
-                style={{ backgroundColor: blueprint.colors.background, color: blueprint.colors.text }}
+                className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-5 transition-colors"
+                style={{
+                  backgroundColor: blueprint.colors?.background || '#0f172a',
+                  color: blueprint.colors?.text || '#f8fafc'
+                }}
               >
-                {/* Page Title */}
-                <div className="space-y-1">
-                  <span
-                    className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-white/10"
-                    style={{ color: blueprint.colors.primary }}
-                  >
-                    {currentPage.title}
-                  </span>
-                  <h2 className="text-xl font-extrabold">{currentPage.subtitle}</h2>
+                {/* Page Title & Hero Cover if uploaded */}
+                <div className="space-y-2">
+                  {currentPage.heroImage && (
+                    <div className="aspect-video w-full rounded-2xl overflow-hidden relative shadow-sm border border-white/10">
+                      <img src={currentPage.heroImage} alt={currentPage.title} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                      <div className="absolute bottom-2 left-3 text-white font-extrabold text-sm drop-shadow">
+                        {currentPage.title}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-0.5">
+                    <span
+                      className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded bg-[#10b981]/20 text-[#10b981]"
+                    >
+                      {currentPage.title}
+                    </span>
+                    <h2 className="text-xl font-extrabold">{currentPage.subtitle}</h2>
+                  </div>
                 </div>
 
                 {/* Render Sections */}
                 {currentPage.sections.map((sec) => (
                   <div key={sec.id} className="space-y-3">
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
-                      <h3 className="text-base font-bold" style={{ color: blueprint.colors.primary }}>
+                    <div
+                      className="p-4 rounded-2xl border shadow-sm space-y-2"
+                      style={{
+                        backgroundColor: blueprint.colors?.surface || '#1e293b',
+                        borderColor: 'rgba(255,255,255,0.1)'
+                      }}
+                    >
+                      <h3 className="text-base font-bold text-[#10b981]">
                         {sec.title}
                       </h3>
                       <p className="text-xs opacity-80 leading-relaxed">{sec.description}</p>
 
                       {/* Hero Specific */}
-                      {sec.type === 'hero' && (
+                      {sec.type === 'hero' && !currentPage.heroImage && (
                         <div className="pt-2 space-y-3">
-                          <div className="aspect-video w-full rounded-xl overflow-hidden relative">
+                          <div className="aspect-video w-full rounded-xl overflow-hidden relative shadow-sm">
                             <img
                               src={blueprint.heroImageUrl}
                               alt="Hero"
@@ -602,8 +612,7 @@ export const FullscreenPreview: React.FC<FullscreenPreviewProps> = ({
                             href={generateWhatsAppUrl()}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95"
-                            style={{ backgroundColor: blueprint.colors.primary, color: '#003824' }}
+                            className="w-full py-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-transform active:scale-95 bg-[#10b981] text-[#003824]"
                           >
                             <MessageCircle className="w-4 h-4 fill-current" />
                             <span>Richiedi Informazioni su WhatsApp</span>
@@ -617,19 +626,23 @@ export const FullscreenPreview: React.FC<FullscreenPreviewProps> = ({
                           {sec.contentItems.map((item, idx) => (
                             <div
                               key={idx}
-                              className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs gap-2"
+                              className="p-3 rounded-xl bg-black/20 border border-white/10 flex items-center justify-between text-xs gap-2"
                             >
                               <div className="flex items-center gap-2.5 min-w-0">
-                                {item.image && (
+                                {item.image ? (
                                   <img
                                     src={item.image}
                                     alt={item.title}
-                                    className="w-10 h-10 rounded-lg object-cover shrink-0 border border-white/20"
+                                    className="w-11 h-11 rounded-lg object-cover shrink-0 border border-white/20"
                                     referrerPolicy="no-referrer"
                                   />
+                                ) : (
+                                  <div className="w-11 h-11 rounded-lg bg-[#10b981]/10 border border-dashed border-[#10b981]/40 flex flex-col items-center justify-center text-[#10b981] shrink-0 p-0.5 text-center">
+                                    <span className="text-[7px] font-extrabold leading-none">Carica Immagine</span>
+                                  </div>
                                 )}
                                 <div className="min-w-0">
-                                  <span className="font-bold block truncate">{item.title}</span>
+                                  <span className="font-extrabold block truncate">{item.title}</span>
                                   {item.subtitle && (
                                     <span className="text-[10px] opacity-70 block truncate">{item.subtitle}</span>
                                   )}
@@ -637,8 +650,7 @@ export const FullscreenPreview: React.FC<FullscreenPreviewProps> = ({
                               </div>
                               {item.price && (
                                 <span
-                                  className="font-bold text-xs px-2 py-1 rounded bg-black/30 shrink-0"
-                                  style={{ color: blueprint.colors.primary }}
+                                  className="font-extrabold text-xs px-2.5 py-1 rounded-lg bg-emerald-100 text-[#003824] shrink-0"
                                 >
                                   {item.price}
                                 </span>
@@ -688,50 +700,6 @@ export const FullscreenPreview: React.FC<FullscreenPreviewProps> = ({
                     )}
                   </div>
                 )}
-
-                {/* Social Share Section */}
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3 text-xs text-left">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-white flex items-center gap-1.5">
-                      <Share2 className="w-4 h-4 text-[#10b981]" />
-                      <span>Condividi questa Web App:</span>
-                    </span>
-                    {copiedShareLink && (
-                      <span className="text-[10px] text-[#10b981] font-bold animate-pulse">Link Copiato!</span>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <a
-                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Scopri la Web App di ${blueprint.businessName}!`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="py-2 bg-[#25D366]/20 border border-[#25D366]/50 hover:bg-[#25D366]/30 text-[#25D366] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-95"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5 fill-current" />
-                      <span>WhatsApp</span>
-                    </a>
-
-                    <a
-                      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="py-2 bg-[#1877F2]/20 border border-[#1877F2]/50 hover:bg-[#1877F2]/30 text-[#1877F2] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-95"
-                    >
-                      <Globe className="w-3.5 h-3.5" />
-                      <span>Facebook</span>
-                    </a>
-
-                    <button
-                      type="button"
-                      onClick={handleCopyShareLink}
-                      className="py-2 bg-[#10b981]/20 border border-[#10b981]/50 hover:bg-[#10b981]/30 text-[#10b981] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-95"
-                    >
-                      {copiedShareLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedShareLink ? 'Copiato' : 'Copia Link'}</span>
-                    </button>
-                  </div>
-                </div>
 
                 {/* Footer Info */}
                 <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-2 text-xs">

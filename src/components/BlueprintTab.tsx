@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SaveReminderBar } from './SaveReminderBar';
 import {
   Globe,
   ChevronDown,
@@ -144,6 +145,8 @@ interface BlueprintTabProps {
   onOpenSeoModal?: () => void;
   onOpenProDashboard?: () => void;
   isProUnlocked?: boolean;
+  onSave?: () => void;
+  lastSavedTime?: string | null;
 }
 
 export const BlueprintTab: React.FC<BlueprintTabProps> = ({
@@ -156,6 +159,8 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
   onOpenSeoModal,
   onOpenProDashboard,
   isProUnlocked = false,
+  onSave,
+  lastSavedTime,
 }) => {
   const [openPageId, setOpenPageId] = useState<string>('home');
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -439,7 +444,7 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const validFiles = Array.from(files).filter(file =>
+    const validFiles = (Array.from(files) as File[]).filter(file =>
       file.type.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/i.test(file.name)
     );
 
@@ -514,6 +519,39 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
     setGeneratedHistory((prev) => prev.filter(p => p !== photoUrl));
   };
 
+  const handleUpdatePageHeroImage = (pageId: string, imageUrl: string) => {
+    const updatedPages = blueprint.pages.map((p) => {
+      if (p.id !== pageId) return p;
+      return { ...p, heroImage: imageUrl };
+    });
+    onUpdateBlueprint({ ...blueprint, pages: updatedPages });
+  };
+
+  const handleUploadPageHeroPhotoDirect = (
+    pageId: string,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/') && !/\.(jpg|jpeg|png|webp)$/i.test(file.name)) {
+      alert('Formato non supportato. Carica un file immagine in formato .jpg, .jpeg, .png o .webp.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        const resultUrl = event.target.result as string;
+        handleUpdatePageHeroImage(pageId, resultUrl);
+        setUserUploadedPhotos((prev) => [resultUrl, ...prev.filter(p => p !== resultUrl)]);
+        setUploadNotice('Foto di copertina della pagina caricata con successo!');
+        setTimeout(() => setUploadNotice(null), 3000);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const getIconForPage = (iconName: string) => {
     switch (iconName) {
       case 'home':
@@ -542,6 +580,11 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
           <div className="h-full bg-[#10b981] w-full transition-all duration-700 ease-out" />
         </div>
       </div>
+
+      {/* Save Reminder Bar */}
+      {onSave && (
+        <SaveReminderBar onSave={onSave} lastSavedTime={lastSavedTime} />
+      )}
 
       {/* Header Section */}
       <section className="space-y-1">
@@ -594,103 +637,6 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
           100% Mobile First • WhatsApp e Prenotazioni • Pronta in 48h
         </p>
       </div>
-
-      {/* Dedicated WhatsApp & Social Share Card */}
-      <section className="bg-[#121c18] border-2 border-[#25D366]/60 rounded-2xl p-4 space-y-4 shadow-xl text-left relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#25D366]/30 pb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#25D366]/20 text-[#25D366] flex items-center justify-center shrink-0 border border-[#25D366]/40 shadow-inner">
-              <MessageCircle className="w-5 h-5 fill-current" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <span>Imposta Numero WhatsApp & Condivisione Social</span>
-                <span className="bg-[#25D366]/20 text-[#25D366] text-[9px] font-black px-2 py-0.5 rounded-full uppercase border border-[#25D366]/40">
-                  Contatto Rapido
-                </span>
-              </h3>
-              <p className="text-[11px] text-[#bbcabf]">
-                Permetti ai clienti di contattarti con 1 Tap e condividi la tua Web App sui social
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          {/* Quick WhatsApp Input Field with Button */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-white flex items-center gap-1.5">
-              <MessageCircle className="w-4 h-4 text-[#25D366] fill-current" />
-              <span>Numero WhatsApp per Messaggi e Ordini Direct:</span>
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={blueprint.whatsapp || ''}
-                onChange={(e) =>
-                  onUpdateBlueprint({
-                    ...blueprint,
-                    whatsapp: e.target.value,
-                    phone: e.target.value,
-                  })
-                }
-                placeholder="Inserisci il numero WhatsApp (es. +39 348 1234567)"
-                className="flex-1 bg-[#0e0e0d] border border-[#25D366]/50 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-[#25D366]"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  alert(`Numero WhatsApp salvato: ${blueprint.whatsapp || 'Non impostato'}`);
-                }}
-                className="px-4 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-black font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-[#25D366]/20 shrink-0"
-              >
-                <Check className="w-4 h-4 font-black" />
-                <span>Salva Numero</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Social Share Buttons */}
-          <div className="pt-2 border-t border-[#25D366]/20 space-y-2">
-            <span className="text-[10px] font-bold text-[#86948a] uppercase tracking-wider block">
-              Pulsanti Condivisione Sui Social:
-            </span>
-            <div className="grid grid-cols-3 gap-2">
-              <a
-                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Guarda la nostra Web App: ${blueprint.businessName}!`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="py-2.5 bg-[#25D366]/15 hover:bg-[#25D366]/30 border border-[#25D366]/40 text-[#25D366] rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
-              >
-                <MessageCircle className="w-4 h-4 fill-current" />
-                <span>WhatsApp</span>
-              </a>
-
-              <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="py-2.5 bg-[#1877F2]/15 hover:bg-[#1877F2]/30 border border-[#1877F2]/40 text-[#1877F2] rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
-              >
-                <Globe className="w-4 h-4" />
-                <span>Facebook</span>
-              </a>
-
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  alert('Link della Web App copiato negli appunti!');
-                }}
-                className="py-2.5 bg-[#10b981]/15 hover:bg-[#10b981]/30 border border-[#10b981]/40 text-[#10b981] rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
-              >
-                <Copy className="w-4 h-4" />
-                <span>Copia Link</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Informazioni Attività & Indicizzazione SEO Card */}
       <section className="bg-[#1c1c1a] border border-[#3c4a42]/60 rounded-2xl p-4 space-y-4 shadow-md text-left">
@@ -789,29 +735,49 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
             />
           </div>
 
-          {/* WhatsApp / Phone Input */}
-          <div className="space-y-1">
+          {/* WhatsApp / Phone Input with AGGIUNGI NUMERO WHATSAPP Button */}
+          <div className="space-y-1 md:col-span-2 bg-[#25D366]/10 border border-[#25D366]/40 p-3 rounded-2xl text-left space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-[11px] font-bold text-[#e5e2df] flex items-center gap-1">
-                <span>Telefono & WhatsApp Direct</span>
+              <label className="text-xs font-extrabold text-[#25D366] flex items-center gap-1.5">
+                <MessageCircle className="w-4 h-4 fill-current" />
+                <span>Configurazione Numero WhatsApp Direct</span>
               </label>
               <button
                 type="button"
                 onClick={() => setActiveSeoHelp(seoHelpDictionary.whatsapp)}
-                className="px-2 py-0.5 rounded-full bg-[#10b981]/15 hover:bg-[#10b981]/30 border border-[#10b981]/40 text-[#10b981] font-extrabold text-[10px] flex items-center gap-1 transition-all active:scale-95"
-                title="Consigli SEO Google per il Contatto WhatsApp"
+                className="px-2 py-0.5 rounded-full bg-[#25D366]/20 border border-[#25D366]/40 text-[#25D366] font-extrabold text-[10px] flex items-center gap-1"
               >
-                <HelpCircle className="w-3 h-3 text-[#10b981]" />
-                <span>SEO Help</span>
+                <HelpCircle className="w-3 h-3 text-[#25D366]" />
+                <span>WhatsApp Help</span>
               </button>
             </div>
-            <input
-              type="text"
-              value={blueprint.whatsapp}
-              onChange={(e) => onUpdateBlueprint({ ...blueprint, whatsapp: e.target.value })}
-              className="w-full bg-[#0e0e0d] border border-[#3c4a42] rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-[#10b981] transition-all"
-              placeholder="Es: +39 340 1234567"
-            />
+
+            <p className="text-[11px] text-[#bbcabf]">
+              Inserisci il tuo numero di cellulare aziendale comprensivo di prefisso (+39 per l'Italia).
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-stretch gap-2 pt-1">
+              <input
+                type="text"
+                value={blueprint.whatsapp}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  onUpdateBlueprint({ ...blueprint, whatsapp: val, phone: val });
+                }}
+                className="flex-1 bg-[#0e0e0d] border border-[#25D366]/50 rounded-xl px-3 py-2 text-xs font-extrabold text-white focus:outline-none focus:border-[#25D366] transition-all"
+                placeholder="Es: +39 340 1234567"
+              />
+
+              <a
+                href={`https://wa.me/${(blueprint.whatsapp || '').replace(/[^0-9]/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95 shadow"
+              >
+                <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                <span>Testa Link Chat</span>
+              </a>
+            </div>
           </div>
 
           {/* Address Input */}
@@ -953,6 +919,54 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
                       />
                     </div>
 
+                    {/* Page Cover / Hero Photo Uploader */}
+                    <div className="p-3 bg-[#1c1c1a] rounded-xl border border-[#10b981]/30 space-y-2 text-left">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-[#10b981] flex items-center gap-1.5">
+                          <ImageIcon className="w-3.5 h-3.5 text-[#10b981]" />
+                          <span>Immagine di Copertina Pagina ({page.title}):</span>
+                        </label>
+                        {page.heroImage && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdatePageHeroImage(page.id, '')}
+                            className="text-[10px] text-rose-400 font-bold hover:underline flex items-center gap-1"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>Rimuovi</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {page.heroImage ? (
+                        <div className="relative rounded-xl overflow-hidden h-28 border border-[#10b981]/50 group">
+                          <img src={page.heroImage} alt={page.title} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <label className="px-3 py-1.5 bg-[#10b981] text-black font-extrabold rounded-lg text-xs cursor-pointer">
+                              Sostituisci Immagine
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/jpg,image/png,image/webp"
+                                onChange={(e) => handleUploadPageHeroPhotoDirect(page.id, e)}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      ) : (
+                        <label className="w-full p-3.5 rounded-xl border border-dashed border-[#10b981]/60 hover:border-[#10b981] bg-[#0e0e0d] hover:bg-[#10b981]/10 flex items-center justify-center gap-2 cursor-pointer transition-all text-xs font-bold text-[#10b981]">
+                          <Camera className="w-4 h-4 text-[#10b981]" />
+                          <span>Carica la tua immagine per {page.title}</span>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/jpg,image/png,image/webp"
+                            onChange={(e) => handleUploadPageHeroPhotoDirect(page.id, e)}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+
                     {page.sections.map((sec) => (
                       <div key={sec.id} className="space-y-3 bg-[#1c1c1a]/80 p-3.5 rounded-xl border border-[#3c4a42]/20">
                         <div>
@@ -995,8 +1009,8 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
                                         className="w-12 h-12 rounded-lg border border-dashed border-[#10b981]/50 hover:border-[#10b981] bg-[#1c1c1a] hover:bg-[#10b981]/10 flex flex-col items-center justify-center text-[#10b981] cursor-pointer transition-all p-1 text-center"
                                         title="Carica Foto JPG per questo Prodotto"
                                       >
-                                        <Camera className="w-4 h-4 mb-0.5" />
-                                        <span className="text-[8px] font-extrabold uppercase">Foto JPG</span>
+                                        <Camera className="w-4 h-4 mb-0.5 text-[#10b981]" />
+                                        <span className="text-[7px] font-bold text-center leading-none text-[#10b981]">Carica la tua immagine</span>
                                         <input
                                           type="file"
                                           accept="image/jpeg,image/jpg,image/png,image/webp"
@@ -1429,6 +1443,10 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
 
       {/* Action Bottom Sheet Controls */}
       <div className="bg-[#1c1c1a] rounded-2xl p-4 space-y-3 border border-[#3c4a42]/40 shadow-2xl">
+        {onSave && (
+          <SaveReminderBar onSave={onSave} lastSavedTime={lastSavedTime} />
+        )}
+
         <button
           onClick={() => setIsExportModalOpen(true)}
           className="w-full h-14 bg-[#10b981] hover:bg-[#059669] text-[#003824] rounded-full font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-98 shadow-lg shadow-[#10b981]/20"

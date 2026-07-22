@@ -13,12 +13,13 @@ import { SubscriptionPlans } from './components/SubscriptionPlans';
 import { SeoMetaModal } from './components/SeoMetaModal';
 import { ProDashboard } from './components/ProDashboard';
 import { OnboardingTour } from './components/OnboardingTour';
+import { SocialShareModal } from './components/SocialShareModal';
 import { WebsiteBlueprint, BusinessCategory, GoalOption } from './types';
 import { DEFAULT_PIZZERIA, DEFAULT_CONSULTANT, DEFAULT_ARTISAN } from './data/defaultTemplates';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('idea');
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
   const [blueprint, setBlueprint] = useState<WebsiteBlueprint>(DEFAULT_PIZZERIA);
   const [historyStack, setHistoryStack] = useState<WebsiteBlueprint[]>([]);
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
@@ -32,6 +33,7 @@ export default function App() {
   const [isSubscriptionPlansOpen, setIsSubscriptionPlansOpen] = useState(false);
   const [isSeoModalOpen, setIsSeoModalOpen] = useState(false);
   const [isProDashboardOpen, setIsProDashboardOpen] = useState(false);
+  const [isSocialShareOpen, setIsSocialShareOpen] = useState(false);
   const [isProUnlocked, setIsProUnlocked] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -215,6 +217,7 @@ export default function App() {
         onOpenSeoModal={() => setIsSeoModalOpen(true)}
         onOpenProDashboard={() => setIsProDashboardOpen(true)}
         onOpenTour={() => setIsTourOpen(true)}
+        onOpenSocialShare={() => setIsSocialShareOpen(true)}
         isProUnlocked={isProUnlocked}
         canUndo={historyStack.length > 0}
         undoCount={historyStack.length}
@@ -258,6 +261,8 @@ export default function App() {
             onOpenSeoModal={() => setIsSeoModalOpen(true)}
             onOpenProDashboard={() => setIsProDashboardOpen(true)}
             isProUnlocked={isProUnlocked}
+            onSave={handleSaveBlueprint}
+            lastSavedTime={lastSavedTime}
           />
         )}
 
@@ -379,6 +384,14 @@ export default function App() {
           onOpenSeoModal={() => setIsSeoModalOpen(true)}
           onOpenFullscreen={() => setIsFullscreenOpen(true)}
           onOpenExportGuide={() => setIsExportGuideOpen(true)}
+        />
+      )}
+
+      {/* Social Share & QR Code Modal */}
+      {isSocialShareOpen && (
+        <SocialShareModal
+          blueprint={blueprint}
+          onClose={() => setIsSocialShareOpen(false)}
         />
       )}
 
