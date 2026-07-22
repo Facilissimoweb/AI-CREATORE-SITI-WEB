@@ -10,6 +10,7 @@ import { ExportGuideModal } from './components/ExportGuideModal';
 import { ChatAssistantModal } from './components/ChatAssistantModal';
 import { ModelingStudioModal } from './components/ModelingStudioModal';
 import { SubscriptionPlans } from './components/SubscriptionPlans';
+import { SeoMetaModal } from './components/SeoMetaModal';
 import { WebsiteBlueprint, BusinessCategory, GoalOption } from './types';
 import { DEFAULT_PIZZERIA, DEFAULT_CONSULTANT, DEFAULT_ARTISAN } from './data/defaultTemplates';
 
@@ -25,6 +26,7 @@ export default function App() {
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [isModelingStudioOpen, setIsModelingStudioOpen] = useState(false);
   const [isSubscriptionPlansOpen, setIsSubscriptionPlansOpen] = useState(false);
+  const [isSeoModalOpen, setIsSeoModalOpen] = useState(false);
   const [isProUnlocked, setIsProUnlocked] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -128,6 +130,7 @@ export default function App() {
         onOpenChatModal={() => setIsChatModalOpen(true)}
         onOpenModelingStudio={() => setIsModelingStudioOpen(true)}
         onOpenSubscriptionPlans={() => setIsSubscriptionPlansOpen(true)}
+        onOpenSeoModal={() => setIsSeoModalOpen(true)}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
       />
@@ -162,6 +165,7 @@ export default function App() {
             onOpenFullscreen={() => setIsFullscreenOpen(true)}
             onOpenChatModal={() => setIsChatModalOpen(true)}
             onOpenModelingStudio={() => setIsModelingStudioOpen(true)}
+            onOpenSeoModal={() => setIsSeoModalOpen(true)}
           />
         )}
 
@@ -257,6 +261,18 @@ export default function App() {
             showToast(`🎉 Piano ${planName} attivato con successo! Funzionalità sbloccate.`);
           }}
           onClose={() => setIsSubscriptionPlansOpen(false)}
+        />
+      )}
+
+      {/* SEO Meta Settings Modal */}
+      {isSeoModalOpen && (
+        <SeoMetaModal
+          blueprint={blueprint}
+          onUpdateBlueprint={(updated) => {
+            setBlueprint(updated);
+            showToast("Impostazioni SEO & OpenGraph aggiornate!");
+          }}
+          onClose={() => setIsSeoModalOpen(false)}
         />
       )}
     </div>

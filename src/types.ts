@@ -43,6 +43,19 @@ export interface SitePage {
   sections: PageSection[];
 }
 
+export interface SeoMetadata {
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  canonicalUrl?: string;
+  author?: string;
+  robots?: string;
+  faviconUrl?: string;
+}
+
 export interface WebsiteBlueprint {
   businessName: string;
   category: BusinessCategory;
@@ -66,6 +79,7 @@ export interface WebsiteBlueprint {
   address: string;
   openingHours: string;
   pages: SitePage[];
+  seo?: SeoMetadata;
 }
 
 export interface ChatMessage {

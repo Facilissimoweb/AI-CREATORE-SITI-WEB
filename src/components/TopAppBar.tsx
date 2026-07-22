@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bolt, Sparkles, Smartphone, Moon, Sun, Download, Bot, Sliders, Crown } from 'lucide-react';
+import { Bolt, Sparkles, Smartphone, Moon, Sun, Download, Bot, Sliders, Crown, Search } from 'lucide-react';
 
 interface TopAppBarProps {
   onOpenFullscreen: () => void;
@@ -7,6 +7,7 @@ interface TopAppBarProps {
   onOpenChatModal?: () => void;
   onOpenModelingStudio?: () => void;
   onOpenSubscriptionPlans?: () => void;
+  onOpenSeoModal?: () => void;
   darkMode: boolean;
   onToggleDarkMode: () => void;
 }
@@ -17,6 +18,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   onOpenChatModal,
   onOpenModelingStudio,
   onOpenSubscriptionPlans,
+  onOpenSeoModal,
   darkMode,
   onToggleDarkMode,
 }) => {
@@ -32,6 +34,17 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
       </div>
 
       <div className="flex items-center gap-1.5">
+        {onOpenSeoModal && (
+          <button
+            onClick={onOpenSeoModal}
+            className="bg-[#0e0e0d] border border-[#3c4a42] text-[#35dec1] hover:text-white px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 transition-all active:scale-95 shadow"
+            title="Impostazioni SEO & OpenGraph"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">SEO</span>
+          </button>
+        )}
+
         {onOpenSubscriptionPlans && (
           <button
             onClick={onOpenSubscriptionPlans}

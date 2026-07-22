@@ -369,13 +369,36 @@ app.post("/api/deploy-vercel", async (req, res) => {
       status: "active"
     };
 
+    const seoTitle = blueprint.seo?.metaTitle || `${blueprint.businessName} - Web App Mobile First`;
+    const seoDesc = blueprint.seo?.metaDescription || blueprint.tagline || blueprint.description || `Web App per ${blueprint.businessName} a ${blueprint.city}.`;
+    const seoKeywords = blueprint.seo?.keywords || `${blueprint.businessName}, ${blueprint.city}, whatsapp`;
+    const ogTitle = blueprint.seo?.ogTitle || seoTitle;
+    const ogDesc = blueprint.seo?.ogDescription || seoDesc;
+    const ogImage = blueprint.seo?.ogImage || blueprint.heroImageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&auto=format&fit=crop';
+    const canonical = blueprint.seo?.canonicalUrl || '';
+    const robots = blueprint.seo?.robots || 'index, follow';
+
     // Generate standalone Web App Mobile First HTML
     const htmlContent = `<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${blueprint.businessName} - Web App Mobile First</title>
+  <title>${seoTitle}</title>
+  <meta name="description" content="${seoDesc}">
+  <meta name="keywords" content="${seoKeywords}">
+  <meta name="robots" content="${robots}">
+  ${canonical ? `<link rel="canonical" href="${canonical}">` : ''}
+  <!-- OpenGraph Meta Tags -->
+  <meta property="og:title" content="${ogTitle}">
+  <meta property="og:description" content="${ogDesc}">
+  <meta property="og:image" content="${ogImage}">
+  <meta property="og:type" content="website">
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${ogTitle}">
+  <meta name="twitter:description" content="${ogDesc}">
+  <meta name="twitter:image" content="${ogImage}">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>

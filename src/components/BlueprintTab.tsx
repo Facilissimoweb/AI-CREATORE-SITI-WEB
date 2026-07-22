@@ -23,7 +23,8 @@ import {
   Key,
   FileCode,
   Bot,
-  Sliders
+  Sliders,
+  Search
 } from 'lucide-react';
 import { WebsiteBlueprint, SitePage } from '../types';
 import { ExportGuideModal } from './ExportGuideModal';
@@ -35,6 +36,7 @@ interface BlueprintTabProps {
   onOpenFullscreen: () => void;
   onOpenChatModal?: () => void;
   onOpenModelingStudio?: () => void;
+  onOpenSeoModal?: () => void;
 }
 
 export const BlueprintTab: React.FC<BlueprintTabProps> = ({
@@ -44,6 +46,7 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
   onOpenFullscreen,
   onOpenChatModal,
   onOpenModelingStudio,
+  onOpenSeoModal,
 }) => {
   const [openPageId, setOpenPageId] = useState<string>('home');
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -134,25 +137,35 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
         </p>
       </section>
 
-      {/* Quick Launch Copilota & Studio Action Bar */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* Quick Launch Copilota, Studio & SEO Action Bar */}
+      <div className="grid grid-cols-3 gap-2">
         {onOpenChatModal && (
           <button
             onClick={onOpenChatModal}
-            className="p-3 bg-[#6700c9] hover:bg-[#5800ac] text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+            className="p-3 bg-[#6700c9] hover:bg-[#5800ac] text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-md"
           >
             <Bot className="w-4 h-4 text-[#cfacff]" />
-            <span>Copilota AI Chat</span>
+            <span>Copilota</span>
           </button>
         )}
 
         {onOpenModelingStudio && (
           <button
             onClick={onOpenModelingStudio}
-            className="p-3 bg-[#10b981]/20 hover:bg-[#10b981]/30 border border-[#10b981]/60 text-[#10b981] rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+            className="p-3 bg-[#10b981]/20 hover:bg-[#10b981]/30 border border-[#10b981]/60 text-[#10b981] rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-md"
           >
             <Sliders className="w-4 h-4" />
-            <span>Plancia Modellazione</span>
+            <span>Studio</span>
+          </button>
+        )}
+
+        {onOpenSeoModal && (
+          <button
+            onClick={onOpenSeoModal}
+            className="p-3 bg-[#0e0e0d] hover:bg-[#1c1c1a] border border-[#3c4a42] text-[#35dec1] rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-md"
+          >
+            <Search className="w-4 h-4" />
+            <span>SEO Meta</span>
           </button>
         )}
       </div>
