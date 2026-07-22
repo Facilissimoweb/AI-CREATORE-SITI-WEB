@@ -1,0 +1,6 @@
+{
+  "name": "Facilissimo Web",
+  "description": "Web app mobile-first e assistente AI per creare e personalizzare siti web per piccole attività, artigiani e professionisti.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
