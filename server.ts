@@ -248,6 +248,243 @@ ${JSON.stringify(currentBlueprint || {})}
   }
 });
 
+// API Endpoint 3: AI Image Generator for Professional Business Placeholders
+app.post("/api/generate-image", async (req, res) => {
+  try {
+    const { prompt, businessType, category, aspectRatio = "16:9" } = req.body;
+    const ai = getGeminiClient();
+
+    const cleanPrompt = prompt || `Professional high resolution interior/exterior photo of a ${businessType || category || 'business'}, warm atmospheric lighting, elegant composition, photorealistic 8k detail`;
+
+    try {
+      // Attempt Imagen 3 Generation via Gemini SDK
+      const response = await ai.models.generateImages({
+        model: "imagen-3.0-generate-002",
+        prompt: cleanPrompt,
+        config: {
+          numberOfImages: 1,
+          aspectRatio: (aspectRatio as any) || "16:9",
+          outputMimeType: "image/jpeg",
+        },
+      });
+
+      if (response.generatedImages && response.generatedImages[0]?.image?.imageBytes) {
+        const base64Data = response.generatedImages[0].image.imageBytes;
+        const imageUrl = `data:image/jpeg;base64,${base64Data}`;
+        return res.json({
+          success: true,
+          imageUrl,
+          prompt: cleanPrompt,
+          source: "imagen-3"
+        });
+      }
+    } catch (imagenErr: any) {
+      console.warn("Imagen generation fallback triggered:", imagenErr?.message || imagenErr);
+    }
+
+    // High quality curated photographic fallback library by category
+    const categoryImagesMap: Record<string, string[]> = {
+      artigiano: [
+        "https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=1200&q=80"
+      ],
+      consulente: [
+        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200&q=80"
+      ],
+      ristorante: [
+        "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1579751626657-72bc17010498?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80"
+      ],
+      pizzeria: [
+        "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=1200&q=80"
+      ],
+      fitness: [
+        "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80"
+      ],
+      salute: [
+        "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80"
+      ],
+      default: [
+        "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80"
+      ]
+    };
+
+    const targetKey = (category || businessType || '').toLowerCase();
+    let foundKey = 'default';
+    for (const k of Object.keys(categoryImagesMap)) {
+      if (targetKey.includes(k)) {
+        foundKey = k;
+        break;
+      }
+    }
+
+    const list = categoryImagesMap[foundKey];
+    const fallbackUrl = list[Math.floor(Math.random() * list.length)];
+
+    return res.json({
+      success: true,
+      imageUrl: fallbackUrl,
+      prompt: cleanPrompt,
+      source: "curated-library"
+    });
+  } catch (err: any) {
+    console.error("Error generating image:", err);
+    return res.status(500).json({
+      success: false,
+      error: err?.message || "Impossibile generare l'immagine al momento"
+    });
+  }
+});
+
+// API Endpoint 4: AI Copywriter for About Us & Services Sections
+app.post("/api/generate-copy", async (req, res) => {
+  try {
+    const { businessName, category, city, tagline } = req.body;
+    const ai = getGeminiClient();
+
+    const name = businessName || "La Nostra Attività";
+    const cat = category || "Attività Locale";
+    const location = city || "Italia";
+
+    const systemInstruction = `
+Sei un Copywriter professionista specializzato in Marketing Locale e Web App Mobile-First per piccole e medie imprese italiane.
+Genera testi persuasivi, eleganti e ottimizzati SEO per le sezioni 'Chi Siamo' e 'Servizi'.
+
+Restituisci ESCLUSIVAMENTE un JSON valido con questa esatta struttura:
+{
+  "aboutTitle": "Titolo d'impatto per la sezione Chi Siamo",
+  "aboutDescription": "Un testo avvincente di 3-4 frasi che racconta la passione, l'esperienza e l'impegno verso la qualità e la soddisfazione del cliente.",
+  "servicesTitle": "Titolo chiaro per la sezione Servizi",
+  "servicesDescription": "Una breve introduzione che invita a scoprire l'offerta completa.",
+  "servicesItems": [
+    { "title": "Nome del Servizio 1", "subtitle": "Descrizione accurata dei vantaggi ed esperienza offerta." },
+    { "title": "Nome del Servizio 2", "subtitle": "Descrizione accurata dei vantaggi ed esperienza offerta." },
+    { "title": "Nome del Servizio 3", "subtitle": "Descrizione accurata dei vantaggi ed esperienza offerta." }
+  ],
+  "tagline": "Un nuovo slogan memorabile di 1 frase"
+}
+`;
+
+    const promptText = `
+Attività: "${name}"
+Categoria/Settore: "${cat}"
+Città/Località: "${location}"
+Slogan attuale: "${tagline || ''}"
+`;
+
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3.6-flash",
+        contents: promptText,
+        config: {
+          systemInstruction,
+          responseMimeType: "application/json",
+        },
+      });
+
+      const text = response.text || "{}";
+      const copyData = JSON.parse(text);
+      if (copyData.aboutDescription && copyData.servicesItems) {
+        return res.json({ success: true, copy: copyData, source: "gemini-3.6-flash" });
+      }
+    } catch (aiErr: any) {
+      console.warn("Gemini copy generator fallback triggered:", aiErr?.message || aiErr);
+    }
+
+    // High quality Category Fallback Copy Dictionary
+    const categoryCopyFallback: Record<string, any> = {
+      ristorante: {
+        aboutTitle: `La Passione per la Buona Cucina a ${location}`,
+        aboutDescription: `Fondata sulla tradizione gastronomica locale, ${name} seleziona ogni giorno ingredienti freschissimi a chilometro zero. Offriamo un'atmosfera calda e accogliente dove riscoprire i veri sapori della tavola.`,
+        servicesTitle: "I Nostri Servizi Gastronomici",
+        servicesDescription: "Esperienze deliziose pensate per ogni occasione speciale.",
+        servicesItems: [
+          { title: "Pranzi e Cene Gourmet", subtitle: "Menù stagionale curato dai nostri chef con abbinamenti di vini selezionati." },
+          { title: "Asporto & Consegna Veloci", subtitle: "Ordina comodamente online per gustare i nostri piatti direttamente a casa tua." },
+          { title: "Eventi & Cerimonie", subtitle: "Sale riservate e menù personalizzati per feste, compleanni e incontri aziendali." }
+        ],
+        tagline: "Tradizione, ingredienti scelti e passione in ogni piatto."
+      },
+      consulente: {
+        aboutTitle: `Eccellenza e Strategia per la Tua Crescita`,
+        aboutDescription: `${name} è lo studio di consulenza professionale di riferimento a ${location}. Aiutiamo privati e aziende a raggiungere i propri obiettivi con strategie trasparenti, competenze consolidate e soluzioni su misura.`,
+        servicesTitle: "Ambiti di Consulenza",
+        servicesDescription: "Supporto strategico ed operativo ad alto valore aggiunto.",
+        servicesItems: [
+          { title: "Consulenza Strategica Su Misura", subtitle: "Analisi approfondita delle esigenze per piani d'azione chiari ed efficaci." },
+          { title: "Pianificazione & Gestione", subtitle: "Ottimizzazione dei processi e supporto continuo per ridurre rischi e tempi." },
+          { title: "Assistenza Diretta & Tutorato", subtitle: "Un consulente dedicato sempre al tuo fianco per ogni decisione chiave." }
+        ],
+        tagline: "Competenza, visione e soluzioni concrete al tuo servizio."
+      },
+      artigiano: {
+        aboutTitle: `Maestria Artigiana e Cura dei Dettagli`,
+        aboutDescription: `Da anni ${name} unisce sapienza artigianale e tecniche innovative a ${location}. Realizziamo opere su misura uniche, lavorate con materiali di prima qualità per garantire bellezza e durata nel tempo.`,
+        servicesTitle: "Lavorazioni & Progetti Su Misura",
+        servicesDescription: "Progettazione dettagliata e realizzazione a regola d'arte.",
+        servicesItems: [
+          { title: "Progettazione Personalizzata", subtitle: "Ideazione e rilievo misure gratuito per soluzioni perfettamente integrate." },
+          { title: "Realizzazione Artigianale", subtitle: "Lavorazione scrupolosa e finiture di pregio realizzate a mano nel nostro laboratorio." },
+          { title: "Installazione & Manutenzione", subtitle: "Posa in opera a regola d'arte e assistenza post-vendita garantita." }
+        ],
+        tagline: "Qualità fatta a mano e cura sartoriale per ogni progetto."
+      },
+      fitness: {
+        aboutTitle: `Il Tuo Benessere Fisico al Centro`,
+        aboutDescription: `${name} è il punto di riferimento a ${location} per chi desidera ritrovare energia, forma fisica e salute. Allenatori qualificati ti guidano con programmi personalizzati e un approccio motivante.`,
+        servicesTitle: "Corsi & Programmi di Allenamento",
+        servicesDescription: "Percorsi adatti a ogni livello per raggiungere i tuoi traguardi.",
+        servicesItems: [
+          { title: "Personal Training Unico", subtitle: "Scheda di allenamento su misura con monitoraggio costante dei progressi." },
+          { title: "Corsi di Gruppo Motivanti", subtitle: "Lavori funzionali, stretching e corsi ad alta energia in ambiente dinamico." },
+          { title: "Consulenza Nutrizionale", subtitle: "Piani alimentari bilanciati per affiancare l'attività fisica e massimizzare i risultati." }
+        ],
+        tagline: "Raggiungi la versione migliore di te con i nostri esperti."
+      },
+      default: {
+        aboutTitle: `Chi Siamo - La Qualità che Fa la Differenza`,
+        aboutDescription: `${name} nasce a ${location} con la missione di offrire servizi eccellenti e un'attenzione totale alle esigenze dei clienti. Grazie a un team esperto, garantiamo affidabilità, tempi certi e la massima soddisfazione.`,
+        servicesTitle: "I Nostri Servizi Principali",
+        servicesDescription: "Soluzioni complete pensate per garantirti serenità e risultati.",
+        servicesItems: [
+          { title: "Consulenza & Preventivo Gratuito", subtitle: "Ascoltiamo le tue esigenze e ti proponiamo la soluzione ideale senza impegno." },
+          { title: "Esecuzione Professionale", subtitle: "Servizio rapido e curato in ogni dettaglio con standard di qualità elevati." },
+          { title: "Assistenza Dedicata", subtitle: "Supporto costante prima, durante e dopo per una soddisfazione garantita." }
+        ],
+        tagline: "Servizio professionale, trasparenza e massima cura del cliente."
+      }
+    };
+
+    const targetKey = (cat || "").toLowerCase();
+    let selectedCopy = categoryCopyFallback.default;
+    for (const key of Object.keys(categoryCopyFallback)) {
+      if (targetKey.includes(key)) {
+        selectedCopy = categoryCopyFallback[key];
+        break;
+      }
+    }
+
+    return res.json({ success: true, copy: selectedCopy, source: "category-template" });
+  } catch (err: any) {
+    console.error("Error generating copy:", err);
+    return res.status(500).json({ success: false, error: err?.message || "Errore generazione testi" });
+  }
+});
+
 // In-Memory Database for Client Published Sites
 const publishedSitesStore: Record<string, any> = {};
 
@@ -514,9 +751,7 @@ app.post("/api/deploy-vercel", async (req, res) => {
     }
 
     // Fallback if VERCEL_TOKEN is not configured: serve via Facilissimo Web App staging route
-    const protocol = req.headers["x-forwarded-proto"] || "http";
-    const host = req.headers.host || `localhost:${PORT}`;
-    const localStagingUrl = `${protocol}://${host}/site/${cleanSlug}`;
+    const localStagingUrl = `https://ai-creatore-siti-web.vercel.app/site/${cleanSlug}`;
 
     return res.json({
       success: true,

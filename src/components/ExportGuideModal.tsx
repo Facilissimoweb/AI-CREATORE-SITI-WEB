@@ -78,11 +78,11 @@ export const ExportGuideModal: React.FC<ExportGuideModalProps> = ({
       });
       const data = await res.json();
       if (data.success) {
-        setPublishedUrl(data.publicUrl);
+        setPublishedUrl(`https://ai-creatore-siti-web.vercel.app${data.publicUrl}`);
       }
     } catch (e) {
       console.error("Errore pubblicazione:", e);
-      setPublishedUrl(`/site/${clientSlug}`);
+      setPublishedUrl(`https://ai-creatore-siti-web.vercel.app/site/${clientSlug}`);
     } finally {
       setPublishing(false);
     }
@@ -360,7 +360,7 @@ Per qualsiasi modifica a immagini, menu o numeri WhatsApp, puoi ricontattare la 
                   Genera dinamicamente un sottodominio / link di staging per consentire al tuo cliente di visualizzare la sua <strong>Web App Mobile First</strong> su qualsiasi smartphone.
                 </p>
                 <div className="p-2.5 bg-[#1c1c1a] rounded-xl border border-[#3c4a42]/40 text-[11px] font-mono text-[#35dec1] truncate">
-                  {typeof window !== 'undefined' ? `${window.location.origin}/site/${clientSlug}` : `/site/${clientSlug}`}
+                  https://ai-creatore-siti-web.vercel.app/site/{clientSlug}
                 </div>
               </div>
 
@@ -428,10 +428,10 @@ Per qualsiasi modifica a immagini, menu o numeri WhatsApp, puoi ricontattare la 
                   <span>Sito Pubblico in Abbonamento (SaaS Managed)</span>
                 </div>
                 <p className="text-[#bbcabf] text-[11px] leading-relaxed">
-                  In questa modalità il cliente mantiene il sito attivo sul link <strong>facilissimoweb.it/site/{clientSlug}</strong> tramite un abbonamento mensile/annuale.
+                  In questa modalità il cliente mantiene il sito attivo sul link <strong>ai-creatore-siti-web.vercel.app/site/{clientSlug}</strong> tramite un abbonamento mensile/annuale.
                 </p>
                 <div className="p-2.5 bg-black/40 rounded-xl border border-white/10 text-[11px] font-mono text-[#10b981] flex justify-between items-center">
-                  <span className="truncate">/site/{clientSlug}</span>
+                  <span className="truncate">https://ai-creatore-siti-web.vercel.app/site/{clientSlug}</span>
                   <span className="text-[9px] px-2 py-0.5 rounded bg-[#10b981]/20 text-[#10b981] font-sans font-bold">LINK ATTIVO</span>
                 </div>
               </div>

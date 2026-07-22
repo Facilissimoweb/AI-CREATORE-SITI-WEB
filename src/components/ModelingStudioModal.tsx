@@ -469,7 +469,7 @@ export const ModelingStudioModal: React.FC<ModelingStudioModalProps> = ({
                   In modalità abbonamento SaaS, la Web App resta ospitata sui server Facilissimo Web all'indirizzo:
                 </p>
                 <div className="p-2.5 bg-black/50 rounded-xl border border-white/10 font-mono text-[11px] text-[#10b981]">
-                  facilissimoweb.it/site/{blueprint.businessName.toLowerCase().replace(/[^a-z0-9]/g, '-')}
+                  https://ai-creatore-siti-web.vercel.app/site/{blueprint.businessName.toLowerCase().replace(/[^a-z0-9]/g, '-')}
                 </div>
               </div>
 

@@ -478,7 +478,7 @@ export const FullscreenPreview: React.FC<FullscreenPreviewProps> = ({
                 <div className="flex-1 bg-[#0e0e0d] rounded-full px-3 py-1 flex items-center gap-1.5 text-[11px] text-[#bbcabf] truncate border border-[#3c4a42]/30">
                   <Lock className="w-3 h-3 text-[#10b981] shrink-0" />
                   <span className="truncate">
-                    https://{blueprint.businessName.toLowerCase().replace(/[^a-z0-9]/g, '')}.facilissimoweb.it
+                    https://ai-creatore-siti-web.vercel.app/site/{blueprint.businessName.toLowerCase().replace(/[^a-z0-9]/g, '')}
                   </span>
                 </div>
               </div>

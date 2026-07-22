@@ -39,7 +39,7 @@ export async function deployToVercel(blueprint: WebsiteBlueprint): Promise<Verce
   } catch (error: any) {
     console.warn('Fallback local staging url due to network or token:', error);
     const slug = (blueprint.businessName || 'webapp').toLowerCase().replace(/[^a-z0-9]/g, '-');
-    const localUrl = `${window.location.origin}/site/${slug}`;
+    const localUrl = `https://ai-creatore-siti-web.vercel.app/site/${slug}`;
     
     return {
       success: true,
