@@ -595,6 +595,103 @@ export const BlueprintTab: React.FC<BlueprintTabProps> = ({
         </p>
       </div>
 
+      {/* Dedicated WhatsApp & Social Share Card */}
+      <section className="bg-[#121c18] border-2 border-[#25D366]/60 rounded-2xl p-4 space-y-4 shadow-xl text-left relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#25D366]/30 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#25D366]/20 text-[#25D366] flex items-center justify-center shrink-0 border border-[#25D366]/40 shadow-inner">
+              <MessageCircle className="w-5 h-5 fill-current" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>Imposta Numero WhatsApp & Condivisione Social</span>
+                <span className="bg-[#25D366]/20 text-[#25D366] text-[9px] font-black px-2 py-0.5 rounded-full uppercase border border-[#25D366]/40">
+                  Contatto Rapido
+                </span>
+              </h3>
+              <p className="text-[11px] text-[#bbcabf]">
+                Permetti ai clienti di contattarti con 1 Tap e condividi la tua Web App sui social
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {/* Quick WhatsApp Input Field with Button */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-white flex items-center gap-1.5">
+              <MessageCircle className="w-4 h-4 text-[#25D366] fill-current" />
+              <span>Numero WhatsApp per Messaggi e Ordini Direct:</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={blueprint.whatsapp || ''}
+                onChange={(e) =>
+                  onUpdateBlueprint({
+                    ...blueprint,
+                    whatsapp: e.target.value,
+                    phone: e.target.value,
+                  })
+                }
+                placeholder="Inserisci il numero WhatsApp (es. +39 348 1234567)"
+                className="flex-1 bg-[#0e0e0d] border border-[#25D366]/50 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-[#25D366]"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  alert(`Numero WhatsApp salvato: ${blueprint.whatsapp || 'Non impostato'}`);
+                }}
+                className="px-4 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-black font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-[#25D366]/20 shrink-0"
+              >
+                <Check className="w-4 h-4 font-black" />
+                <span>Salva Numero</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Social Share Buttons */}
+          <div className="pt-2 border-t border-[#25D366]/20 space-y-2">
+            <span className="text-[10px] font-bold text-[#86948a] uppercase tracking-wider block">
+              Pulsanti Condivisione Sui Social:
+            </span>
+            <div className="grid grid-cols-3 gap-2">
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Guarda la nostra Web App: ${blueprint.businessName}!`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-2.5 bg-[#25D366]/15 hover:bg-[#25D366]/30 border border-[#25D366]/40 text-[#25D366] rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
+              >
+                <MessageCircle className="w-4 h-4 fill-current" />
+                <span>WhatsApp</span>
+              </a>
+
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-2.5 bg-[#1877F2]/15 hover:bg-[#1877F2]/30 border border-[#1877F2]/40 text-[#1877F2] rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
+              >
+                <Globe className="w-4 h-4" />
+                <span>Facebook</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  alert('Link della Web App copiato negli appunti!');
+                }}
+                className="py-2.5 bg-[#10b981]/15 hover:bg-[#10b981]/30 border border-[#10b981]/40 text-[#10b981] rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
+              >
+                <Copy className="w-4 h-4" />
+                <span>Copia Link</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Informazioni Attività & Indicizzazione SEO Card */}
       <section className="bg-[#1c1c1a] border border-[#3c4a42]/60 rounded-2xl p-4 space-y-4 shadow-md text-left">
         <div className="flex items-center justify-between border-b border-[#3c4a42]/40 pb-3">

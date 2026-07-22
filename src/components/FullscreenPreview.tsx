@@ -28,7 +28,9 @@ import {
   Settings,
   RefreshCw,
   Eye,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Share2,
+  Copy
 } from 'lucide-react';
 import { WebsiteBlueprint } from '../types';
 
@@ -103,6 +105,14 @@ export const FullscreenPreview: React.FC<FullscreenPreviewProps> = ({
   const [bookingTime, setBookingTime] = useState('20:00');
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [isAppMenuOpen, setIsAppMenuOpen] = useState(false);
+  const [copiedShareLink, setCopiedShareLink] = useState(false);
+
+  const handleCopyShareLink = () => {
+    const link = window.location.href;
+    navigator.clipboard.writeText(link);
+    setCopiedShareLink(true);
+    setTimeout(() => setCopiedShareLink(false), 3000);
+  };
 
   const currentPage =
     blueprint.pages.find((p) => p.slug === activePageSlug) || blueprint.pages[0];
@@ -678,6 +688,50 @@ export const FullscreenPreview: React.FC<FullscreenPreviewProps> = ({
                     )}
                   </div>
                 )}
+
+                {/* Social Share Section */}
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3 text-xs text-left">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-white flex items-center gap-1.5">
+                      <Share2 className="w-4 h-4 text-[#10b981]" />
+                      <span>Condividi questa Web App:</span>
+                    </span>
+                    {copiedShareLink && (
+                      <span className="text-[10px] text-[#10b981] font-bold animate-pulse">Link Copiato!</span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <a
+                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Scopri la Web App di ${blueprint.businessName}!`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2 bg-[#25D366]/20 border border-[#25D366]/50 hover:bg-[#25D366]/30 text-[#25D366] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-95"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                      <span>WhatsApp</span>
+                    </a>
+
+                    <a
+                      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2 bg-[#1877F2]/20 border border-[#1877F2]/50 hover:bg-[#1877F2]/30 text-[#1877F2] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-95"
+                    >
+                      <Globe className="w-3.5 h-3.5" />
+                      <span>Facebook</span>
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={handleCopyShareLink}
+                      className="py-2 bg-[#10b981]/20 border border-[#10b981]/50 hover:bg-[#10b981]/30 text-[#10b981] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-95"
+                    >
+                      {copiedShareLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedShareLink ? 'Copiato' : 'Copia Link'}</span>
+                    </button>
+                  </div>
+                </div>
 
                 {/* Footer Info */}
                 <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-2 text-xs">
