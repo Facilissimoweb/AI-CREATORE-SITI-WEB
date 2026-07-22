@@ -123,14 +123,14 @@ export const ProDashboard: React.FC<ProDashboardProps> = ({
     .replace(/[^a-z0-9]/g, '-')
     .replace(/-+/g, '-');
 
-  // Simulated Published Apps list
+  // Published Apps list with real working site routes
   const [publishedApps, setPublishedApps] = useState([
     {
       id: 'app-current',
       name: blueprint.businessName || 'La Tua Web App',
       category: blueprint.categoryLabel || 'Attività Locale',
       status: 'online',
-      url: `https://${cleanSlug}.vercel.app`,
+      url: typeof window !== 'undefined' ? `${window.location.origin}/site/${cleanSlug}` : `/site/${cleanSlug}`,
       customDomain: `www.${cleanSlug}.it`,
       visitsMonth: '14,820',
       conversions: '1,240',
@@ -142,7 +142,7 @@ export const ProDashboard: React.FC<ProDashboardProps> = ({
       name: 'Pizzeria Bella Napoli',
       category: 'Ristorazione',
       status: 'online',
-      url: 'https://pizzeria-bella-napoli.vercel.app',
+      url: typeof window !== 'undefined' ? `${window.location.origin}/site/pizzeria-bella-napoli` : `/site/pizzeria-bella-napoli`,
       customDomain: 'www.pizzeriabellanapoli.it',
       visitsMonth: '6,410',
       conversions: '512',
@@ -154,7 +154,7 @@ export const ProDashboard: React.FC<ProDashboardProps> = ({
       name: 'Studio Legale De Luca',
       category: 'Consulenza',
       status: 'online',
-      url: 'https://studio-legale-deluca.vercel.app',
+      url: typeof window !== 'undefined' ? `${window.location.origin}/site/studio-legale-deluca` : `/site/studio-legale-deluca`,
       customDomain: 'www.studiolegaledeluca.com',
       visitsMonth: '3,890',
       conversions: '210',
@@ -166,7 +166,7 @@ export const ProDashboard: React.FC<ProDashboardProps> = ({
       name: 'Ceramiche Artigianali Trequanda',
       category: 'Artigianato',
       status: 'dns_pending',
-      url: 'https://ceramiche-trequanda.vercel.app',
+      url: typeof window !== 'undefined' ? `${window.location.origin}/site/ceramiche-trequanda` : `/site/ceramiche-trequanda`,
       customDomain: 'www.ceramichetrequanda.it',
       visitsMonth: '1,120',
       conversions: '88',
@@ -951,7 +951,7 @@ export const ProDashboard: React.FC<ProDashboardProps> = ({
                   Crea un codice QR ad alta risoluzione pronto da stampare sui tavoli del locale per far aprire la Web App all'istante.
                 </p>
                 <button
-                  onClick={() => handleCopy(`https://${cleanSlug}.vercel.app`, 'qr-code')}
+                  onClick={() => handleCopy(typeof window !== 'undefined' ? `${window.location.origin}/site/${cleanSlug}` : `/site/${cleanSlug}`, 'qr-code')}
                   className="w-full py-2 bg-[#10b981] hover:bg-[#059669] text-[#003824] font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition-all"
                 >
                   {copiedId === 'qr-code' ? <Check className="w-3.5 h-3.5" /> : <Download className="w-3.5 h-3.5" />}

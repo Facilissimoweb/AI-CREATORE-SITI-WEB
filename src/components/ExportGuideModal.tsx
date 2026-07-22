@@ -359,8 +359,8 @@ Per qualsiasi modifica a immagini, menu o numeri WhatsApp, puoi ricontattare la 
                 <p className="text-[#bbcabf] text-[11px] leading-relaxed">
                   Genera dinamicamente un sottodominio / link di staging per consentire al tuo cliente di visualizzare la sua <strong>Web App Mobile First</strong> su qualsiasi smartphone.
                 </p>
-                <div className="p-2.5 bg-[#1c1c1a] rounded-xl border border-[#3c4a42]/40 text-[11px] font-mono text-[#35dec1]">
-                  facilissimo-webapp-{clientSlug}.vercel.app
+                <div className="p-2.5 bg-[#1c1c1a] rounded-xl border border-[#3c4a42]/40 text-[11px] font-mono text-[#35dec1] truncate">
+                  {typeof window !== 'undefined' ? `${window.location.origin}/site/${clientSlug}` : `/site/${clientSlug}`}
                 </div>
               </div>
 

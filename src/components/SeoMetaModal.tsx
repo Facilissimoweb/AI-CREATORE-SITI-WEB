@@ -37,7 +37,7 @@ export const SeoMetaModal: React.FC<SeoMetaModalProps> = ({
   const defaultOgTitle = blueprint.seo?.ogTitle || defaultMetaTitle;
   const defaultOgDesc = blueprint.seo?.ogDescription || defaultMetaDesc;
   const defaultOgImage = blueprint.seo?.ogImage || blueprint.heroImageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&auto=format&fit=crop';
-  const defaultCanonical = blueprint.seo?.canonicalUrl || `https://facilissimo-webapp-${blueprint.businessName.toLowerCase().replace(/[^a-z0-9]/g, '-')}.vercel.app`;
+  const defaultCanonical = blueprint.seo?.canonicalUrl || (typeof window !== 'undefined' ? `${window.location.origin}/site/${blueprint.businessName.toLowerCase().replace(/[^a-z0-9]/g, '-')}` : `/site/${blueprint.businessName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`);
   const defaultRobots = blueprint.seo?.robots || 'index, follow';
   const defaultFavicon = blueprint.seo?.faviconUrl || 'https://fav.farm/🚀';
 
